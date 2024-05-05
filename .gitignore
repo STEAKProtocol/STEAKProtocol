@@ -6,6 +6,8 @@ secret*
 *.db-shm
 *.db-wal
 steak_protocol/offchain/distribute.py
+metadata.sh
+*.json
 # Created by https://www.toptal.com/developers/gitignore/api/python,pycharm+all,latex
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm+all,latex
 
