@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "steak_protocol"
+version = "0.1.0"
+description = ""
+authors = ["Namano Gyuuniku <namano@steakprotocol.com>"]
+readme = "README.md"
+packages = [{include = "steak_protocol"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10, <3.12"
+opshin = "^0.21.1"
+fire = "^0.5.0"
+pycardano = {git = "https://github.com/steak-dev/pycardano", rev = "running_fixes"}
+peewee = "^3.17.1"
+ogmios = "^1.0.6"
+fastapi = "^0.109.2"
+uvicorn = {extras = ["all"], version = "^0.27.1"}
+gelidum = "^0.7.0"
+fastapi-cache2 = "^0.2.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.9.0"
+pytest = "^7.4.3"
+pre-commit = "^3.5.0"
+hypothesis = "^6.92.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
