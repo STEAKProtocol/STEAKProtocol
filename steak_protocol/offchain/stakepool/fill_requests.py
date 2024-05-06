@@ -52,8 +52,9 @@ from opshin.builder import apply_parameters
 
 
 def main(
-    name: str = "creator",
+    name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
+    stake_key: str = "*",
 ):
     _, payment_skey, payment_address = get_signing_info(name, network=network)
 
@@ -114,7 +115,19 @@ def main(
     # collect request (just one Add or Remove for now)
     request_utxo = None
     request_state = None
-    for u in context.utxos(stakepool_request_script + "/*"):
+    # NOTE: "*" only works with ogmios + kupo
+    if stake_key == "*":
+        stakepool_request_address_adjusted = (
+            str(stakepool_request_address) + "/*"
+        )
+    else:
+        stake_key = pycardano.Address.from_primitive(stake_key)
+        stakepool_request_address_adjusted = pycardano.Address(
+            payment_part=stakepool_request_address.payment_part,
+            staking_part=stake_key.staking_part,
+            network=stakepool_address.network,
+        )
+    for u in context.utxos(stakepool_request_address_adjusted):
         try:
             request_state = AddStakeRequest.from_cbor(u.output.datum.cbor)
             is_add_request = True
