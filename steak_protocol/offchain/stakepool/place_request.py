@@ -38,7 +38,9 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     stakecoin_amount: int = 42_000_000,  # negative amount means remove stake request
+    stakepool_id: str = "2番",
 ):
+    stakepool_id = stakepool_id.encode()
     _, payment_skey, payment_address = get_signing_info(name, network=network)
 
     _, _, stakepool_request_address = get_contract("stakepool_request")
@@ -86,6 +88,8 @@ def main(
             stakeholder_state = StakeHolderState.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
+        if stakeholder_state.params.stakechain_id != stakepool_id:
+            continue
         stakeholder_utxo = u
         break
     assert stakeholder_utxo is not None, "No stake holder state found"
@@ -100,7 +104,7 @@ def main(
             owner=to_address(payment_address).payment_credential.credential_hash,
             beneficiary=to_address(payment_address),
             req_token=lp_token,
-            req_min_amount=stakecoin_amount, # TODO: properly compute this
+            req_min_amount=stakecoin_amount,  # TODO: properly compute this
         )
     elif stakecoin_amount < 0:
         stake_request_datum = RemoveStakeRequest(
