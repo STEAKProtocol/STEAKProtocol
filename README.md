@@ -58,6 +58,8 @@ An example is shown below.
 export BLOCKFROST_PROJECT_ID=<your-blockfrost-key>
 # Alternatively, set up ogmios to point to localhost:1337
 
+# Install all dependencies
+poetry install
 # Activate the poetry shell
 poetry shell
 # Create a key pair
