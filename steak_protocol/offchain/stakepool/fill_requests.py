@@ -14,6 +14,7 @@ from pycardano import (
     Address,
     plutus_script_hash,
     PlutusData,
+    Unit,
 )
 from steak_protocol.onchain.stakepool.stakepool_request import (
     AddStakeRequest,
@@ -237,7 +238,7 @@ def main(
         txbuilder.mint = minted_lp_asset
         txbuilder.add_minting_script(
             stakepool_script,
-            Redeemer(PlutusData()),
+            Redeemer(Unit()),
         )
         txbuilder.withdrawals = Withdrawals(
             {

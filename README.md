@@ -68,14 +68,28 @@ python3 steak_protocol/create_key_pair.py alice
 # Deposit $STK tokens and at least 10 Ada at the created address
 # Using a wallet or something similar
 
+# Option A)
 # Then, register as a stake holder
 python3 -m steak_protocol.offchain.stakeholder.init alice --stake-amount 1000 --stakeholder-id alice
 # Finally, try mining a block
 python3 -m steak_protocol.offchain.stakechain.mine alice
+
+# Option B)
+# For stake pools, the process is a bit more involved
+# First, register a stake pool
+python3 -m steak_protocol.offchain.stakepool.init alice --stakeholder-id apool
+# The, place a request to join the pool
+python3 -m steak_protocol.offchain.stakepool.place_request alice --stakeholder-id apool --stakecoin_amount 1000
+# The request can be batched by anyone, but you may want to batch it yourself
+python3 -m steak_protocol.offchain.stakepool.fill_request alice --no-stake-key
+# Finally, try mining a block
+python3 -m steak_protocol.offchain.stakechain.mine alice
 ```
 
-A similar process can be followed to register a new stake pool.
+Note that stake pools can allow further users to join the pool by placing a request to join the pool.
+Singleton stake holder can not be pooled, but can still mine blocks.
 All corresponding scripts and documentation can be found in the `steak_protocol/offchain/stakepool` directory.
+Any script provides a `--help` flag to show the available options.
 
 
 ## Building the contracts
