@@ -55,6 +55,7 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     stake_key: str = "*",
+    no_stake_key: bool = False,
 ):
     _, payment_skey, payment_address = get_signing_info(name, network=network)
 
@@ -103,17 +104,18 @@ def main(
     request_utxo = None
     request_state = None
     # NOTE: "*" only works with ogmios + kupo
-    if stake_key == "*":
+    if no_stake_key:
+        stakepool_request_address_adjusted = stakepool_request_address
+    elif stake_key == "*":
         stakepool_request_address_adjusted = str(stakepool_request_address) + "/*"
-    elif stake_key and stake_key != "-":
+    else:
+        assert stake_key, "No stake key provided"
         stake_key = pycardano.Address.from_primitive(stake_key)
         stakepool_request_address_adjusted = pycardano.Address(
             payment_part=stakepool_request_address.payment_part,
             staking_part=stake_key.staking_part,
             network=stakepool_address.network,
         )
-    else:
-        stakepool_request_address_adjusted = stakepool_request_address
 
     for u in context.utxos(stakepool_request_address_adjusted):
         try:
