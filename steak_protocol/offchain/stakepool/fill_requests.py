@@ -105,7 +105,7 @@ def main(
     # NOTE: "*" only works with ogmios + kupo
     if stake_key == "*":
         stakepool_request_address_adjusted = str(stakepool_request_address) + "/*"
-    elif stake_key:
+    elif stake_key and stake_key != "-":
         stake_key = pycardano.Address.from_primitive(stake_key)
         stakepool_request_address_adjusted = pycardano.Address(
             payment_part=stakepool_request_address.payment_part,
