@@ -30,7 +30,8 @@ The chain can be observed on preview testnet on any Chain Explorer like CexPlore
 
 The $STK token on preview testnet has this token name and policy id: [`126a82c32b90b321eec79a79eaacd07abcc902d18cfcf62652708e6d.0014df107374616b65636f696e`](https://preview.cexplorer.io/asset/asset17xpvsxzxvdw4rraeyj4jk3p0gcm9vdetdrh0fa)
 
-The $STK token can be obtained by trading on [preview SundaeSwap v2](https://v2.sundaeswap.finance/).
+The $STK token can be obtained by trading on [preview SundaeSwap v2](https://v2.preview.sundaeswap.finance/).
+You can obtain tADA at the [Cardano testnet faucet](https://docs.cardano.org/cardano-testnets/tools/faucet/) - make sure to select "Preview" testnet!
 
 ## Mining Blocks
 
