@@ -318,8 +318,8 @@ def mine(
             context,
         )
     )
-    txbuilder.validity_start = context.last_block_slot
-    txbuilder.ttl = context.last_block_slot + 2
+    txbuilder.validity_start = context.last_block_slot + 1
+    txbuilder.ttl = txbuilder.validity_start
     txbuilder.auxiliary_data = pycardano.AuxiliaryData(
         data=pycardano.AlonzoMetadata(
             metadata=pycardano.Metadata(

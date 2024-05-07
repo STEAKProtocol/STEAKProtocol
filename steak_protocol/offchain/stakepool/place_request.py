@@ -40,6 +40,7 @@ def main(
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     stakecoin_amount: int = 42_000_000,  # negative amount means remove stake request
     stakepool_id: str = "2番",
+    return_tx: bool = False,
 ):
     stakepool_id = stakepool_id.encode()
     _, payment_skey, payment_address = get_signing_info(name, network=network)
@@ -157,6 +158,8 @@ def main(
 
     context.submit_tx(tx)
     show_tx(tx)
+    if return_tx:
+        return tx
 
 
 if __name__ == "__main__":

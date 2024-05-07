@@ -85,6 +85,7 @@ def main(
     decimals: int = 6,
     website: str = "https://steakprotocol.com",
     upgrade_length: int = 7,
+    return_tx: bool = False,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -288,10 +289,11 @@ def main(
         stakechain_auth_nft.policy_id.hex(),
         stakechain_auth_nft.token_name.hex(),
     )
-    return (
-        tx,
-        f"{stakechain_auth_nft.policy_id.hex()}.{stakechain_auth_nft_tokenname.hex()}",
-    )
+    if return_tx:
+        return (
+            tx,
+            f"{stakechain_auth_nft.policy_id.hex()}.{stakechain_auth_nft_tokenname.hex()}",
+        )
 
 
 if __name__ == "__main__":

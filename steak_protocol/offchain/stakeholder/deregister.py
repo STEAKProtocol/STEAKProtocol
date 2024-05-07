@@ -31,20 +31,14 @@ from steak_protocol.offchain.util import (
     value_from_token,
 )
 from steak_protocol.onchain.stakechain.stakechain import (
-    MineBlock,
-    MineBlockUpdateStake,
     DeregisterStake,
 )
-from steak_protocol.onchain.stakeholder.stakeholder import UpdateStake
 from steak_protocol.onchain.types import (
     StakeChainState,
-    CoreChainState,
     StakeHolderState,
-    ProducerState,
     StakeHolderRegistrations,
 )
 from steak_protocol.onchain.util import (
-    scale_fraction,
     remove_int_at_index,
     remove_bytes_at_index,
 )

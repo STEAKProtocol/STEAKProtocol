@@ -64,6 +64,7 @@ def main(
     pool_admin_reward_fraction: int = "1/10",
     stakeholder_id: str = "2番",
     skip_warning: bool = False,
+    return_tx: bool = False,
 ):
     print(
         "Warning: if you previously ran this script with the same name, the secrets will be overwritten. Press enter to continue."
@@ -256,6 +257,8 @@ def main(
     # only commit / overwrite hash secrets if the transaction was successful
     commit_hash_secrets(name, hash_secrets)
     show_tx(tx)
+    if return_tx:
+        return tx
 
 
 if __name__ == "__main__":

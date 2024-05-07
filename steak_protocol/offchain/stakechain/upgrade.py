@@ -64,6 +64,7 @@ def main(
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     previous_producer_states_cbor: List[str] = None,
     proposal_cbor: str = None,
+    return_tx: bool = False,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -196,7 +197,8 @@ def main(
 
     context.submit_tx(tx)
     show_tx(tx)
-    return tx
+    if return_tx:
+        return tx
 
 
 if __name__ == "__main__":

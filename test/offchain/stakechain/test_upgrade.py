@@ -6,7 +6,7 @@ from pycardano import datum_hash
 
 from steak_protocol.offchain.stakechain.init import main as init_stakechain
 from steak_protocol.offchain.stakeholder.init import main as init_stakeholder
-from steak_protocol.offchain.stakechain.mine import main as mine_stakechain
+from steak_protocol.offchain.stakechain.mine import mine as mine_stakechain
 from steak_protocol.onchain.stakechain.stakechain_upgrade import ChainUpgradeProposal
 from steak_protocol.submit_ref_script import main as submit_ref_script
 from steak_protocol.offchain.stakechain.upgrade import main as upgrade_stakechain
@@ -21,6 +21,7 @@ def test_upgrade():
     wait_for_tx(submit_ref_script())
     stakechain_tx, stakechain_nft = init_stakechain(
         **asdict(DEFAULT_CONFIG),
+        return_tx=True,
     )
     wait_for_tx(
         stakechain_tx,
@@ -31,6 +32,7 @@ def test_upgrade():
                 DEFAULT_CONFIG.name,
                 stakechain_nft,
                 DEFAULT_CONFIG.upgrade_length,
+                return_tx=True,
             )
         )
     except Exception as e:
@@ -43,6 +45,7 @@ def test_upgrade():
             stake_amount=10000,
             stakeholder_id="0",
             skip_warning=True,
+            return_tx=True,
         )
     )
     upgrade_proposal = ChainUpgradeProposal(
@@ -86,5 +89,6 @@ def test_upgrade():
                 )
             ),
             proposal_cbor=upgrade_proposal.to_cbor().hex(),
+            return_tx=True,
         )
     )

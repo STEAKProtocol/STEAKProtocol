@@ -11,6 +11,7 @@ def test_init():
     wait_for_tx(submit_ref_script())
     stakechain_tx, stakechain_nft = init_stakechain(
         **asdict(DEFAULT_CONFIG),
+        return_tx=True,
     )
     wait_for_tx(
         stakechain_tx,
@@ -22,5 +23,6 @@ def test_init():
             stake_amount=10000,
             stakeholder_id="0",
             skip_warning=True,
+            return_tx=True,
         )
     )

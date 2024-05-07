@@ -47,8 +47,9 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     stake_amount: int = 1_000_000,
-    stakeholder_id: str = "1番",
+    stakeholder_id: str = "3番",
     skip_warning: bool = False,
+    return_tx: bool = False,
 ):
     print(
         "Warning: if you previously ran this script with the same name, the secrets will be overwritten. Press enter to continue."
@@ -193,7 +194,8 @@ def main(
     # only commit / overwrite the secrets if the transaction was successful
     commit_hash_secrets(name, hash_secrets)
     show_tx(tx)
-    return tx
+    if return_tx:
+        return tx
 
 
 if __name__ == "__main__":

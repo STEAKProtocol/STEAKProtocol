@@ -32,6 +32,7 @@ from steak_protocol.utils.to_script_context import (
 def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
+    return_tx: bool = False,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -105,6 +106,8 @@ def main(
 
     context.submit_tx(tx)
     show_tx(tx)
+    if return_tx:
+        return tx
 
 
 if __name__ == "__main__":

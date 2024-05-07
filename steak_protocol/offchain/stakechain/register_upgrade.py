@@ -49,6 +49,7 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     upgrade_len: int = 2,
+    return_tx: bool = False,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -102,7 +103,8 @@ def main(
 
     context.submit_tx(tx)
     show_tx(tx)
-    return tx
+    if return_tx:
+        return tx
 
 
 if __name__ == "__main__":

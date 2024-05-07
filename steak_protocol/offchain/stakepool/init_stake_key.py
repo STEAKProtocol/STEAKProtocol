@@ -34,6 +34,7 @@ from opshin.builder import apply_parameters
 def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
+    return_tx: bool = False,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -88,6 +89,8 @@ def main(
 
     context.submit_tx(signed_tx)
     show_tx(signed_tx)
+    if return_tx:
+        return signed_tx
 
 
 if __name__ == "__main__":
