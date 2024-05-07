@@ -76,6 +76,7 @@ def compute_validity_interval(genesis_time: int, slot_length: int) -> tuple[int,
 def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
+    pool_id: str = "1番",
     producer_message_hash_hex: Optional[str] = None,
 ):
     while True:
@@ -83,6 +84,7 @@ def main(
             mine(
                 name=name,
                 stakechain_auth_nft=stakechain_auth_nft,
+                pool_id=pool_id,
                 producer_message_hash_hex=producer_message_hash_hex,
             )
         except KeyboardInterrupt:
@@ -339,8 +341,12 @@ def mine(
     )
 
     context.submit_tx(tx)
-    commit_hash_secrets(pool_id, new_stakeholder_secrets)
     show_tx(tx)
+    time.sleep(60)
+    assert (
+        context.utxo_by_tx_id(tx.id.payload.hex(), 0) is not None
+    ), "Transaction not found, aborting"
+    commit_hash_secrets(pool_id, new_stakeholder_secrets)
     return tx, new_stakechain_state
 
 
