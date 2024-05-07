@@ -21,5 +21,6 @@ def test_init():
             stakechain_auth_nft=stakechain_nft,
             stake_amount=10000,
             stakeholder_id="0",
+            skip_warning=True,
         )
     )

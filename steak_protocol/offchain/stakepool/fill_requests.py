@@ -1,3 +1,5 @@
+import functools
+import random
 from time import sleep
 
 import fire
@@ -17,6 +19,7 @@ from pycardano import (
     plutus_script_hash,
     PlutusData,
     Unit,
+    OgmiosChainContext,
 )
 from steak_protocol.onchain.stakepool.stakepool_request import (
     AddStakeRequest,
@@ -43,7 +46,7 @@ from steak_protocol.onchain.types import (
 )
 from steak_protocol.utils import get_signing_info, network, context
 from steak_protocol.utils.contracts import get_contract, get_ref_utxo
-from steak_protocol.utils.network import show_tx
+from steak_protocol.utils.network import show_tx, ogmios_url, kupo_url
 from steak_protocol.utils.to_script_context import (
     to_address,
     to_tx_out_ref,
@@ -52,6 +55,8 @@ from steak_protocol.utils.from_script_context import from_address
 from pycardano.crypto.bech32 import encode
 
 from opshin.builder import apply_parameters
+
+datum_cache = {}
 
 
 def main(
@@ -132,7 +137,9 @@ def fill_request(
     if no_stake_key:
         stakepool_request_address_adjusted = stakepool_request_address
     elif stake_key == "*":
-        stakepool_request_address_adjusted = str(stakepool_request_address) + "/*"
+        stakepool_request_address_adjusted = (
+            stakepool_request_address.payment_part.payload.hex() + "/*"
+        )
     else:
         assert stake_key, "No stake key provided"
         stake_key = pycardano.Address.from_primitive(stake_key)
@@ -141,8 +148,23 @@ def fill_request(
             staking_part=stake_key.staking_part,
             network=stakepool_address.network,
         )
-
-    for u in context.utxos(stakepool_request_address_adjusted):
+    if kupo_url is not None:
+        # ugly hack
+        context._datum_cache = datum_cache
+        context._kupo_url = kupo_url
+        context._utxos_kupo = functools.partial(OgmiosChainContext._utxos_kupo, context)
+        context._get_datum_from_kupo = functools.partial(
+            OgmiosChainContext._get_datum_from_kupo, context
+        )
+        context._extract_asset_info = functools.partial(
+            OgmiosChainContext._extract_asset_info, context
+        )
+        # end of ugly hack
+        utxos = context._utxos_kupo(stakepool_request_address_adjusted)
+    else:
+        utxos = context.utxos(stakepool_request_address_adjusted)
+    random.shuffle(utxos)
+    for u in utxos:
         try:
             request_state = AddStakeRequest.from_cbor(u.output.datum.cbor)
             is_add_request = True
@@ -386,7 +408,7 @@ def fill_request(
 
         context.submit_tx(
             # TODO adjust this if you get an error about an unbalanced transaction
-            adjust_for_wrong_fee(tx, [payment_skey], output_offset=0)
+            adjust_for_wrong_fee(tx, [payment_skey], output_offset=0, fee_offset=0)
         )
         show_tx(tx)
 

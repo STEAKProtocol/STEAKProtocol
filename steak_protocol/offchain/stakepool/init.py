@@ -63,7 +63,13 @@ def main(
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     pool_admin_reward_fraction: int = "1/10",
     stakeholder_id: str = "2番",
+    skip_warning: bool = False,
 ):
+    print(
+        "Warning: if you previously ran this script with the same name, the secrets will be overwritten. Press enter to continue."
+    )
+    if not skip_warning:
+        input()
     stakeholder_id = stakeholder_id.encode()
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -139,7 +145,6 @@ def main(
     minted_asset = asset_from_token(stakeholder_auth_nft, 1)
 
     hash_secrets = [random.randbytes(20) for _ in range(5)]
-    commit_hash_secrets(name, hash_secrets)
     new_stakeholder_state = StakeHolderState(
         StakePoolParams(
             owner=ScriptCredential(
@@ -248,6 +253,8 @@ def main(
     )
 
     context.submit_tx(tx)
+    # only commit / overwrite hash secrets if the transaction was successful
+    commit_hash_secrets(name, hash_secrets)
     show_tx(tx)
 
 
