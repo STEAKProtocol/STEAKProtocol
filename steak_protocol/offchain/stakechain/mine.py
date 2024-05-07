@@ -1,6 +1,7 @@
 import copy
 import datetime
 import random
+import time
 from typing import Optional
 
 import fire
@@ -73,6 +74,26 @@ def compute_validity_interval(genesis_time: int, slot_length: int) -> tuple[int,
 
 
 def main(
+    name: str = "admin",
+    stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
+    producer_message_hash_hex: Optional[str] = None,
+):
+    while True:
+        try:
+            mine(
+                name=name,
+                stakechain_auth_nft=stakechain_auth_nft,
+                producer_message_hash_hex=producer_message_hash_hex,
+            )
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            print(e)
+            print("Press Ctrl+C to stop. Trying again in 5 seconds...")
+        time.sleep(1)
+
+
+def mine(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     producer_message_hash_hex: Optional[str] = None,
@@ -298,7 +319,7 @@ def main(
         )
     )
     txbuilder.validity_start = context.last_block_slot
-    txbuilder.ttl = context.last_block_slot + 20
+    txbuilder.ttl = context.last_block_slot + 2
     txbuilder.auxiliary_data = pycardano.AuxiliaryData(
         data=pycardano.AlonzoMetadata(
             metadata=pycardano.Metadata(
