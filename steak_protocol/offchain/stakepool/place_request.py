@@ -8,6 +8,7 @@ from pycardano import (
     Value,
     script_hash,
     DeserializeException,
+    MultiAsset,
 )
 from steak_protocol.onchain.stakepool.stakepool import PoolState
 from steak_protocol.onchain.stakepool.stakepool_request import (
@@ -124,7 +125,11 @@ def main(
                 stakepool_request_address,
                 amount=Value(
                     coin=2_000_000,
-                    multi_asset=asset_from_token(stakecoin, max(0, stakecoin_amount)),
+                    multi_asset=(
+                        asset_from_token(stakecoin, stakecoin_amount)
+                        if stakecoin_amount > 0
+                        else asset_from_token(lp_token, -stakecoin_amount)
+                    ),
                 ),
                 datum=stake_request_datum,
             ),

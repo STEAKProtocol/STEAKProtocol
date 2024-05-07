@@ -1,3 +1,5 @@
+from time import sleep
+
 import fire
 import pycardano
 from opshin.ledger.api_v2 import SomeOutputDatum
@@ -53,6 +55,28 @@ from opshin.builder import apply_parameters
 
 
 def main(
+    name: str = "admin",
+    stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
+    stake_key: str = "*",
+    no_stake_key: bool = False,
+):
+    while True:
+        try:
+            fill_request(
+                name=name,
+                stakechain_auth_nft=stakechain_auth_nft,
+                stake_key=stake_key,
+                no_stake_key=no_stake_key,
+            )
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            print(e)
+            print("Press Ctrl+C to stop. Trying again in 5 seconds...")
+        sleep(5)
+
+
+def fill_request(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     stake_key: str = "*",
@@ -360,7 +384,10 @@ def main(
             change_address=payment_address,
         )
 
-        context.submit_tx(tx)
+        context.submit_tx(
+            # TODO adjust this if you get an error about an unbalanced transaction
+            adjust_for_wrong_fee(tx, [payment_skey], output_offset=0)
+        )
         show_tx(tx)
 
 

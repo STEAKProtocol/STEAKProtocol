@@ -78,7 +78,8 @@ def adjust_for_wrong_fee(
     new_value = pycardano.transaction.Value(
         coin=tx_signed.transaction_body.outputs[-1].amount.coin
         - output_offset
-        - fee_offset
+        - fee_offset,
+        multi_asset=tx_signed.transaction_body.outputs[-1].amount.multi_asset,
     )
     tx_signed.transaction_body.outputs[-1].amount = new_value
     tx_signed.transaction_body.fee += fee_offset
