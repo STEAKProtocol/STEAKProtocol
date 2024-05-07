@@ -1,4 +1,6 @@
 import datetime
+from hashlib import sha256
+
 import fire
 import pycardano
 from opshin import apply_parameters
@@ -8,19 +10,9 @@ from pycardano import (
     TransactionOutput,
     Redeemer,
     DeserializeException,
-    Value,
-    Withdrawals,
-    Address,
-    plutus_script_hash,
-    UTxO,
 )
 
 from steak_protocol.onchain.stakeholder import stakeholder, stakeholder_auth_nft
-from steak_protocol.onchain.stakepool.stakepool import (
-    InteractWithPool,
-    PoolState,
-    PoolParams,
-)
 from steak_protocol.offchain.util import (
     sorted_utxos,
     with_min_lovelace,
@@ -54,8 +46,9 @@ from steak_protocol.utils.to_script_context import (
 def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
-    pool_id: str = "2番",
+    pool_id: str = "1番",
 ):
+    pool_id = pool_id.encode()
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
     )
@@ -96,19 +89,21 @@ def main(
     for u in context.utxos(stakeholder_address):
         try:
             stakeholder_state = StakeHolderState.from_cbor(u.output.datum.cbor)
-            if stakeholder_state.params.stakechain_id == pool_id:
+            if stakeholder_state.params.stakechain_id != pool_id:
                 continue
-            if (
-                stakeholder_state.params.block_pubkey == payment_vkey.payload
-                and stakeholder_state.params.chain_auth_nft == stakechain_auth_nft
-            ):
-                stakeholder_utxo = u
-                break
+            if stakeholder_state.params.chain_auth_nft != stakechain_auth_nft:
+                continue
+            stakeholder_utxo = u
+            break
         except DeserializeException:
             continue
         except AttributeError:
             continue
     assert stakeholder_utxo is not None, "No stake holder state found"
+    if stakeholder_state.params.owner.credential_hash != payment_vkey.hash().payload:
+        raise ValueError(
+            "Only the owner can deregister the stakeholder. Did you specify the correct owner / stake pool id?"
+        )
 
     own_index_in_stakeholder_list = (
         stakechain_state.holder_state.stake_holder_ids.index(
@@ -136,8 +131,6 @@ def main(
         - int(own_index_in_stakeholder_list < stakechain_state.skip_holders),
         spent_for=to_tx_out_ref(stakechain_utxo.input),
     )
-
-    stakeholder_is_pool = isinstance(stakeholder_state.params.owner, ScriptCredential)
 
     payment_utxos = context.utxos(payment_address)
     all_input_utxos = sorted_utxos(payment_utxos + [stakechain_utxo, stakeholder_utxo])
@@ -180,29 +173,6 @@ def main(
         ),
     )
 
-    if stakeholder_is_pool:
-        txbuilder.withdrawals = Withdrawals(
-            {
-                bytes(
-                    Address(
-                        staking_part=plutus_script_hash(stakepool_script),
-                        network=network,
-                    )
-                ): 0
-            }
-        )
-        txbuilder.add_withdrawal_script(
-            stakepool_script,
-            Redeemer(
-                InteractWithPool(
-                    own_input_index=stakeholder_utxo_index,
-                    own_output_index=1,
-                    chain_input_index=stakechain_utxo_index,
-                    chain_output_index=0,
-                )
-            ),
-        )
-
     txbuilder.add_output(
         with_min_lovelace(
             TransactionOutput(
@@ -218,8 +188,9 @@ def main(
         stakeholder_auth_nft_script,
         Redeemer(stakeholder_auth_nft.Burn()),
     )
+    txbuilder.required_signers = [payment_vkey.hash()]
     txbuilder.validity_start = context.last_block_slot
-    txbuilder.ttl = context.last_block_slot + 20
+    txbuilder.ttl = context.last_block_slot + 100
     txbuilder.auxiliary_data = pycardano.AuxiliaryData(
         data=pycardano.AlonzoMetadata(
             metadata=pycardano.Metadata({674: {"msg": ["Deregister Stakeholder"]}})

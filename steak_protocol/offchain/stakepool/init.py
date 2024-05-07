@@ -255,7 +255,7 @@ def main(
 
     context.submit_tx(tx)
     # only commit / overwrite hash secrets if the transaction was successful
-    commit_hash_secrets(name, hash_secrets)
+    commit_hash_secrets(stakeholder_id.decode(), hash_secrets)
     show_tx(tx)
     if return_tx:
         return tx

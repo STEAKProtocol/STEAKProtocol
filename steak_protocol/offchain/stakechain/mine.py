@@ -96,6 +96,7 @@ def main(
 def mine(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
+    pool_id: str = "1番",
     producer_message_hash_hex: Optional[str] = None,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
@@ -125,7 +126,7 @@ def mine(
         stakeholder_address
     ), "Wrong stakeholder address"
 
-    stakeholder_secrets = committed_hash_secrets(name)
+    stakeholder_secrets = committed_hash_secrets(pool_id)
     stakeholder_secret_hashes = [sha2_256(x) for x in stakeholder_secrets]
     # prepare stake holder utxo
     stakeholder_utxo = None
@@ -136,6 +137,7 @@ def mine(
             if (
                 stakeholder_state.params.chain_auth_nft == stakechain_auth_nft
                 and stakeholder_state.committed_hashes == stakeholder_secret_hashes
+                and stakeholder_state.params.stakechain_id == pool_id.encode()
             ):
                 stakeholder_utxo = u
                 break
@@ -143,7 +145,9 @@ def mine(
             continue
         except AttributeError:
             continue
-    assert stakeholder_utxo is not None, "No stake holder state found"
+    assert (
+        stakeholder_utxo is not None
+    ), "No stake holder state found. Correct secrets and pool name?"
 
     own_index_in_stakeholder_list = (
         stakechain_state.holder_state.stake_holder_ids.index(
@@ -318,8 +322,8 @@ def mine(
             context,
         )
     )
-    txbuilder.validity_start = context.last_block_slot + 1
-    txbuilder.ttl = txbuilder.validity_start
+    txbuilder.validity_start = context.last_block_slot
+    txbuilder.ttl = txbuilder.validity_start + 30
     txbuilder.auxiliary_data = pycardano.AuxiliaryData(
         data=pycardano.AlonzoMetadata(
             metadata=pycardano.Metadata(
@@ -335,7 +339,7 @@ def mine(
     )
 
     context.submit_tx(tx)
-    commit_hash_secrets(name, new_stakeholder_secrets)
+    commit_hash_secrets(pool_id, new_stakeholder_secrets)
     show_tx(tx)
     return tx, new_stakechain_state
 
