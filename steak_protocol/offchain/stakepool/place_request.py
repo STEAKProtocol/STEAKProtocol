@@ -39,7 +39,7 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     stakecoin_amount: int = 42_000_000,  # negative amount means remove stake request
-    stakepool_id: str = "2番",
+    stakepool_id: str = "1番",
     return_tx: bool = False,
 ):
     stakepool_id = stakepool_id.encode()
@@ -125,7 +125,7 @@ def main(
             TransactionOutput(
                 stakepool_request_address,
                 amount=Value(
-                    coin=2_000_000,
+                    coin=3_500_000,
                     multi_asset=(
                         asset_from_token(stakecoin, stakecoin_amount)
                         if stakecoin_amount > 0

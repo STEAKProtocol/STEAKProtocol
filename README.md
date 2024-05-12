@@ -77,13 +77,13 @@ python3 -m steak_protocol.offchain.stakechain.mine alice --pool_id alice
 # Option B)
 # For stake pools, the process is a bit more involved
 # First, register a stake pool
-python3 -m steak_protocol.offchain.stakepool.init alice --stakeholder_id apool
+python3 -m steak_protocol.offchain.stakepool.init alice --stakepool_id apool
 # The, place a request to join the pool
-python3 -m steak_protocol.offchain.stakepool.place_request alice --stakeholder_id apool --stakecoin_amount 1000
+python3 -m steak_protocol.offchain.stakepool.place_request alice --stakepool_id apool --stakecoin_amount 10_000_000
 # The request can be batched by anyone, but you may want to batch it yourself
 python3 -m steak_protocol.offchain.stakepool.fill_request alice --no_stake_key
 # Finally, try mining a block
-python3 -m steak_protocol.offchain.stakechain.mine alice --pool_id apool
+python3 -m steak_protocol.offchain.stakechain.mine alice --stakepool_id apool
 
 
 # To batch requests from a specific user placed through the frontend, put their staking key

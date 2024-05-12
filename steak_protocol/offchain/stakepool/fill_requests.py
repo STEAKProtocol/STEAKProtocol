@@ -129,8 +129,6 @@ def fill_request(
     )
 
     # collect request (just one Add or Remove for now)
-    request_utxo = None
-    request_state = None
     # NOTE: "*" only works with ogmios + kupo
     if no_stake_key:
         stakepool_request_address_adjusted = stakepool_request_address
@@ -146,10 +144,8 @@ def fill_request(
             staking_part=stake_key.staking_part,
             network=stakepool_address.network,
         )
-    if kupo_url is not None:
-        request_utxos = context._utxos_kupo(stakepool_request_address_adjusted)
-    else:
-        request_utxos = context.utxos(stakepool_request_address_adjusted)
+    request_utxos = context.utxos(stakepool_request_address_adjusted)
+    request_state = None
     random.shuffle(request_utxos)
     for req_utxo in request_utxos:
         try:

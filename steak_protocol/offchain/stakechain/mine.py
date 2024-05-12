@@ -76,7 +76,7 @@ def compute_validity_interval(genesis_time: int, slot_length: int) -> tuple[int,
 def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
-    pool_id: str = "1番",
+    stakepool_id: str = "1番",
     producer_message_hash_hex: Optional[str] = None,
 ):
     while True:
@@ -84,7 +84,7 @@ def main(
             mine(
                 name=name,
                 stakechain_auth_nft=stakechain_auth_nft,
-                pool_id=pool_id,
+                pool_id=stakepool_id,
                 producer_message_hash_hex=producer_message_hash_hex,
             )
         except KeyboardInterrupt:

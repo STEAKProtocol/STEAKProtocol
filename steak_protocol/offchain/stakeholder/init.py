@@ -47,7 +47,7 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     stake_amount: int = 1_000_000,
-    stakeholder_id: str = "1番",
+    stakeholder_id: str = "2番",
     skip_warning: bool = False,
     return_tx: bool = False,
 ):

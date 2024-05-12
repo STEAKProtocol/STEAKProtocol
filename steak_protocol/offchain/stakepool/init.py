@@ -1,5 +1,6 @@
 import random
 from hashlib import sha256
+from typing import Optional
 
 import fire
 import pycardano
@@ -62,16 +63,17 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     pool_admin_reward_fraction: int = "1/10",
-    stakeholder_id: str = "2番",
+    stakepool_id: str = "1番",
     skip_warning: bool = False,
     return_tx: bool = False,
+    return_address: Optional[str] = None,
 ):
     print(
         "Warning: if you previously ran this script with the same name, the secrets will be overwritten. Press enter to continue."
     )
     if not skip_warning:
         input()
-    stakeholder_id = stakeholder_id.encode()
+    stakeholder_id = stakepool_id.encode()
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
     )
@@ -250,7 +252,11 @@ def main(
     )
     tx = txbuilder.build_and_sign(
         signing_keys=[payment_skey],
-        change_address=payment_address,
+        change_address=(
+            payment_address
+            if return_address is None
+            else pycardano.Address.from_primitive(return_address)
+        ),
     )
 
     context.submit_tx(tx)
