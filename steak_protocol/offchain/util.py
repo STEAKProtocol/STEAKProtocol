@@ -1,3 +1,4 @@
+import datetime
 import json
 from hashlib import sha256
 from typing import List, Union
@@ -98,12 +99,40 @@ def adjust_for_wrong_fee(
 
 def committed_hash_secrets(name: str):
     with open(keys_dir / f"{name}.hash_secret") as f:
-        return [bytes.fromhex(x) for x in json.load(f)]
+        d = None
+        for l in reversed(f.readlines()):
+            d = json.loads(l)
+            if not d.get("write_ahead", False):
+                break
+        assert d is not None, "No secrets found for timestamp"
+        return [bytes.fromhex(x) for x in d["secrets"]]
+
+
+def write_ahead_hash_secrets(name: str, secrets: List[bytes]):
+    with open(keys_dir / f"{name}.hash_secret", "a") as f:
+        f.write(
+            json.dumps(
+                {
+                    "secrets": [x.hex() for x in secrets],
+                    "timestamp": datetime.datetime.now().timestamp(),
+                    "write_ahead": True,
+                }
+            )
+            + "\n"
+        )
 
 
 def commit_hash_secrets(name: str, secrets: List[bytes]):
-    with open(keys_dir / f"{name}.hash_secret", "w") as f:
-        json.dump([x.hex() for x in secrets], f)
+    with open(keys_dir / f"{name}.hash_secret", "a") as f:
+        f.write(
+            json.dumps(
+                {
+                    "secrets": [x.hex() for x in secrets],
+                    "timestamp": datetime.datetime.now().timestamp(),
+                }
+            )
+            + "\n"
+        )
 
 
 def custom_sign_message(secret: bytes, message: bytes) -> bytes:

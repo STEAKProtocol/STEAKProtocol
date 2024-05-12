@@ -41,6 +41,7 @@ from steak_protocol.offchain.util import (
     committed_hash_secrets,
     custom_sign_message,
     commit_hash_secrets,
+    write_ahead_hash_secrets,
 )
 from steak_protocol.onchain.stakechain.stakechain import MineBlockUpdateStake
 from steak_protocol.onchain.stakeholder.stakeholder import UpdateStake
@@ -78,6 +79,16 @@ def main(
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     stakepool_id: str = "1番",
     producer_message_hash_hex: Optional[str] = None,
+    # number of seconds of validity for the transaction
+    # closer to 60 -> more likely to hit an invalid slot from stakechain view
+    # closer to 0 -> harder to be included in the cardano chain
+    tx_validity_width: int = 40,
+    # how frequently to retry in case of failure (failure is the default)
+    retry_interval: int = 5,
+    # amount of time to wait before committing hash secrets
+    # lower values may lead to more frequent necessecity to recover the pool
+    # higher values may lead to more frequent missed blocks
+    commit_interval: int = 120,
 ):
     while True:
         try:
@@ -86,13 +97,17 @@ def main(
                 stakechain_auth_nft=stakechain_auth_nft,
                 pool_id=stakepool_id,
                 producer_message_hash_hex=producer_message_hash_hex,
+                tx_validity_width=tx_validity_width,
+                commit_interval=commit_interval,
             )
         except KeyboardInterrupt:
             break
         except Exception as e:
             print(e)
             print("Press Ctrl+C to stop. Trying again in 5 seconds...")
-        time.sleep(1)
+        else:
+            print("Block mined! Trying again in 5 seconds...")
+        time.sleep(retry_interval)
 
 
 def mine(
@@ -100,6 +115,8 @@ def mine(
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     pool_id: str = "1番",
     producer_message_hash_hex: Optional[str] = None,
+    tx_validity_width: int = 40,
+    commit_interval: int = 120,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -324,8 +341,8 @@ def mine(
             context,
         )
     )
-    txbuilder.validity_start = context.last_block_slot
-    txbuilder.ttl = txbuilder.validity_start + 30
+    txbuilder.validity_start = context.last_block_slot + 1
+    txbuilder.ttl = txbuilder.validity_start + tx_validity_width
     txbuilder.auxiliary_data = pycardano.AuxiliaryData(
         data=pycardano.AlonzoMetadata(
             metadata=pycardano.Metadata(
@@ -342,10 +359,14 @@ def mine(
 
     context.submit_tx(tx)
     show_tx(tx)
-    time.sleep(60)
+    write_ahead_hash_secrets(pool_id, new_stakeholder_secrets)
+    # MODIFY THESE STEPS AT YOUR OWN RISK, may lead to need to recover the pool secrets
+    print("Checking if tx made it to the chain... DO NOT ABORT")
+    time.sleep(commit_interval)
     assert (
         context.utxo_by_tx_id(tx.id.payload.hex(), 0) is not None
     ), "Transaction not found, aborting"
+    # END OF DANGER ZONE
     commit_hash_secrets(pool_id, new_stakeholder_secrets)
     return tx, new_stakechain_state
 
