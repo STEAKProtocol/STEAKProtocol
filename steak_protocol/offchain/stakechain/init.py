@@ -1,5 +1,6 @@
 import datetime
 import fractions
+from typing import Optional
 
 import fire
 import pycardano
@@ -86,6 +87,7 @@ def main(
     website: str = "https://steakprotocol.com",
     upgrade_length: int = 7,
     return_tx: bool = False,
+    return_addr: Optional[str] = None,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -278,7 +280,11 @@ def main(
     txbuilder.collaterals = sorted(utxos, key=lambda u: u.output.amount.coin)[:3]
     tx = txbuilder.build_and_sign(
         signing_keys=[payment_skey],
-        change_address=payment_address,
+        change_address=(
+            payment_address
+            if return_addr is None
+            else pycardano.Address.from_primitive(return_addr)
+        ),
     )
 
     context.submit_tx(tx)

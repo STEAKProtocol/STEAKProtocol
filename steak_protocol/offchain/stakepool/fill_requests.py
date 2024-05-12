@@ -56,8 +56,6 @@ from pycardano.crypto.bech32 import encode
 
 from opshin.builder import apply_parameters
 
-datum_cache = {}
-
 
 def main(
     name: str = "bob",
@@ -149,17 +147,6 @@ def fill_request(
             network=stakepool_address.network,
         )
     if kupo_url is not None:
-        # ugly hack
-        context._datum_cache = datum_cache
-        context._kupo_url = kupo_url
-        context._utxos_kupo = functools.partial(OgmiosChainContext._utxos_kupo, context)
-        context._get_datum_from_kupo = functools.partial(
-            OgmiosChainContext._get_datum_from_kupo, context
-        )
-        context._extract_asset_info = functools.partial(
-            OgmiosChainContext._extract_asset_info, context
-        )
-        # end of ugly hack
         request_utxos = context._utxos_kupo(stakepool_request_address_adjusted)
     else:
         request_utxos = context.utxos(stakepool_request_address_adjusted)

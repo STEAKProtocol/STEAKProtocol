@@ -1,4 +1,6 @@
+import functools
 import os
+from typing import List
 
 import blockfrost
 import ogmios
@@ -20,7 +22,7 @@ kupo_url = (
 
 blockfrost_project_id = os.getenv("BLOCKFROST_PROJECT_ID", None)
 
-network = Network.TESTNET
+network = Network.MAINNET
 
 # Load chain context
 if blockfrost_project_id is not None:
@@ -47,12 +49,32 @@ else:
             print("No ogmios available")
             context = None
 
+_datum_cache = {}
+
+if (
+    kupo_url is not None
+    and isinstance(context, ogmios.OgmiosChainContext)
+    or isinstance(context, BlockFrostChainContext)
+):
+    # ugly hack
+    context._datum_cache = _datum_cache
+    context._kupo_url = kupo_url
+    context._get_datum_from_kupo = functools.partial(
+        OgmiosChainContext._get_datum_from_kupo, context
+    )
+    context._extract_asset_info = functools.partial(
+        OgmiosChainContext._extract_asset_info, context
+    )
+    context._utxos = functools.partial(OgmiosChainContext._utxos_kupo, context)
+    # end of ugly hack
+
 
 def show_tx(signed_tx: pycardano.Transaction):
     tx_hash = signed_tx.id.payload.hex()
     print(f"transaction id: {tx_hash}")
     if network == Network.MAINNET:
         print(f"Cexplorer: https://cexplorer.io/tx/{tx_hash}")
+        print(f"Cardanoscan: https://cardanoscan.io/transaction/{tx_hash}")
     else:
         print(f"Cexplorer: https://preview.cexplorer.io/tx/{tx_hash}")
         print(f"Cexplorer: https://preprod.cexplorer.io/tx/{tx_hash}")
