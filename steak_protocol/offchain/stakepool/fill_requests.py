@@ -60,7 +60,7 @@ datum_cache = {}
 
 
 def main(
-    name: str = "admin",
+    name: str = "bob",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     stake_key: str = "*",
     no_stake_key: bool = False,
@@ -160,21 +160,21 @@ def fill_request(
             OgmiosChainContext._extract_asset_info, context
         )
         # end of ugly hack
-        utxos = context._utxos_kupo(stakepool_request_address_adjusted)
+        request_utxos = context._utxos_kupo(stakepool_request_address_adjusted)
     else:
-        utxos = context.utxos(stakepool_request_address_adjusted)
-    random.shuffle(utxos)
-    for u in utxos:
+        request_utxos = context.utxos(stakepool_request_address_adjusted)
+    random.shuffle(request_utxos)
+    for req_utxo in request_utxos:
         try:
-            request_state = AddStakeRequest.from_cbor(u.output.datum.cbor)
+            request_state = AddStakeRequest.from_cbor(req_utxo.output.datum.cbor)
             is_add_request = True
         except DeserializeException as e:
             try:
-                request_state = RemoveStakeRequest.from_cbor(u.output.datum.cbor)
+                request_state = RemoveStakeRequest.from_cbor(req_utxo.output.datum.cbor)
                 is_add_request = False
             except DeserializeException as e:
                 continue
-        request_utxo = u
+        request_utxo = req_utxo
 
         stakeholder_utxo = None
         stakeholder_state = None
@@ -222,7 +222,7 @@ def fill_request(
             amount_of_token_in_value(stakecoin, request_utxo.output.amount)
             if is_add_request
             else (
-                prev_stake_amount
+                -prev_stake_amount
                 * amount_of_token_in_value(lp_token, request_utxo.output.amount)
                 // all_lp_tokens
             )
@@ -237,8 +237,11 @@ def fill_request(
                 // prev_stake_amount
             )
         else:
-            lp_amount_to_burn = amount_of_token_in_value(
-                lp_token, request_utxo.output.amount
+            lp_amount_to_burn = -(
+                all_lp_tokens
+                * (new_stake_amount - prev_stake_amount)
+                // prev_stake_amount
+                + 1
             )
 
         # update weight according to new stake amount
