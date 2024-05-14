@@ -26,6 +26,16 @@ The slot leader is chosen pseudorandomly based on the block hash and weighs part
 
 More details can be found in the [whitepaper](https://steakprotocol.com/whitepaper.pdf).
 
+#### Mainnet
+
+The chain can be observed on mainnet on any Chain Explorer like CardanoScan at this address: [addr1wytr9jvc6tnavc3s86ws76sfpdau3g3gnezpnz5xhhusnrcket8r9](https://cardanoscan.io/address/addr1wytr9jvc6tnavc3s86ws76sfpdau3g3gnezpnz5xhhusnrcket8r9).
+
+The $STK token on mainnet has this token name and policy id: [`2a80c713e0d518f84e0553957e3d581c9326cfc5931ea1f4dd0fb292.0014df107374616b65636f696e`](https://cardanoscan.io/token/2a80c713e0d518f84e0553957e3d581c9326cfc5931ea1f4dd0fb2920014df107374616b65636f696e)
+
+The $STK token can be obtained by trading on [MuesliSwap](https://muesliswap.com/swap/expert?base=.&quote=2a80c713e0d518f84e0553957e3d581c9326cfc5931ea1f4dd0fb292.0014df107374616b65636f696e&t=trading).
+
+#### Preview Testnet
+
 The chain can be observed on preview testnet on any Chain Explorer like CexPlorer at this address: [addr_test1wqtr9jvc6tnavc3s86ws76sfpdau3g3gnezpnz5xhhusnrcd3lmvq](https://preview.cexplorer.io/address/addr_test1wqtr9jvc6tnavc3s86ws76sfpdau3g3gnezpnz5xhhusnrcd3lmvq/tx#data).
 
 The $STK token on preview testnet has this token name and policy id: [`126a82c32b90b321eec79a79eaacd07abcc902d18cfcf62652708e6d.0014df107374616b65636f696e`](https://preview.cexplorer.io/asset/asset17xpvsxzxvdw4rraeyj4jk3p0gcm9vdetdrh0fa)
