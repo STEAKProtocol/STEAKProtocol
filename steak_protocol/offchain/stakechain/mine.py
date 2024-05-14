@@ -357,10 +357,10 @@ def mine(
         change_address=payment_address,
     )
 
+    # MODIFY THESE STEPS AT YOUR OWN RISK, may lead to need to recover the pool secrets
     write_ahead_hash_secrets(pool_id, new_stakeholder_secrets)
     context.submit_tx(tx)
     show_tx(tx)
-    # MODIFY THESE STEPS AT YOUR OWN RISK, may lead to need to recover the pool secrets
     print("Checking if tx made it to the chain... DO NOT ABORT")
     time.sleep(commit_interval)
     assert (

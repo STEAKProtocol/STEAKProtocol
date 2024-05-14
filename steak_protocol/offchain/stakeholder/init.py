@@ -1,4 +1,4 @@
-import random
+import secrets
 from hashlib import sha256
 
 import fire
@@ -23,6 +23,7 @@ from steak_protocol.offchain.util import (
     token_from_string,
     value_from_token,
     commit_hash_secrets,
+    write_ahead_hash_secrets,
 )
 from steak_protocol.onchain.stakechain.stakechain import RegisterStake
 from steak_protocol.onchain.stakeholder.stakeholder_auth_nft import Mint
@@ -118,7 +119,7 @@ def main(
     )
     minted_asset = asset_from_token(stakeholder_auth_nft, 1)
 
-    hash_secrets = [random.randbytes(32) for _ in range(5)]
+    hash_secrets = [secrets.token_bytes(32) for _ in range(5)]
 
     new_stakeholder_state = StakeHolderState(
         StakePoolParams(
@@ -190,6 +191,7 @@ def main(
         change_address=payment_address,
     )
 
+    write_ahead_hash_secrets(stakeholder_id, hash_secrets)
     context.submit_tx(tx)
     # only commit / overwrite the secrets if the transaction was successful
     commit_hash_secrets(stakeholder_id, hash_secrets)

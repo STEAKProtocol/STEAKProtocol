@@ -33,6 +33,7 @@ from steak_protocol.offchain.util import (
     token_from_string,
     value_from_token,
     commit_hash_secrets,
+    write_ahead_hash_secrets,
 )
 from steak_protocol.onchain.stakechain.stakechain import RegisterStake
 from steak_protocol.onchain.stakepool.stakepool import (
@@ -259,6 +260,7 @@ def main(
         ),
     )
 
+    write_ahead_hash_secrets(stakeholder_id.decode(), hash_secrets)
     context.submit_tx(tx)
     # only commit / overwrite hash secrets if the transaction was successful
     commit_hash_secrets(stakeholder_id.decode(), hash_secrets)
