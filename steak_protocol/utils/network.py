@@ -33,6 +33,7 @@ if blockfrost_project_id is not None:
             if network == Network.MAINNET
             else blockfrost.ApiUrls.preview.value
         ),
+        network=network,
     )
 else:
     try:
