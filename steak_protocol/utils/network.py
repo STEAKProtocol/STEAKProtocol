@@ -16,9 +16,7 @@ ogmios_url = f"{ogmios_protocol}://{ogmios_host}:{ogmios_port}"
 kupo_host = os.getenv("KUPO_API_HOST", None)
 kupo_port = os.getenv("KUPO_API_PORT", "80")
 kupo_protocol = os.getenv("KUPO_API_PROTOCOL", "http")
-kupo_url = (
-    f"{kupo_protocol}://{kupo_host}:{kupo_port}" if kupo_host is not None else None
-)
+kupo_url = (f"{kupo_protocol}://{kupo_host}:{kupo_port}") if kupo_host else None
 
 blockfrost_project_id = os.getenv("BLOCKFROST_PROJECT_ID", None)
 
@@ -51,9 +49,8 @@ else:
 
 _datum_cache = {}
 
-if (
-    kupo_url is not None
-    and isinstance(context, ogmios.OgmiosChainContext)
+if kupo_url and (
+    isinstance(context, ogmios.OgmiosChainContext)
     or isinstance(context, BlockFrostChainContext)
 ):
     # ugly hack
