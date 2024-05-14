@@ -1,6 +1,6 @@
 import copy
 import datetime
-import random
+import secrets
 import time
 from typing import Optional
 
@@ -245,7 +245,7 @@ def mine(
     )
 
     new_stakeholder_state = copy.deepcopy(stakeholder_state)
-    new_stakeholder_secrets = stakeholder_secrets[1:] + [random.randbytes(32)]
+    new_stakeholder_secrets = stakeholder_secrets[1:] + [secrets.token_bytes(32)]
     new_stakeholder_state.committed_hashes = stakeholder_secret_hashes[1:] + [
         sha2_256(new_stakeholder_secrets[-1])
     ]
@@ -357,9 +357,9 @@ def mine(
         change_address=payment_address,
     )
 
+    write_ahead_hash_secrets(pool_id, new_stakeholder_secrets)
     context.submit_tx(tx)
     show_tx(tx)
-    write_ahead_hash_secrets(pool_id, new_stakeholder_secrets)
     # MODIFY THESE STEPS AT YOUR OWN RISK, may lead to need to recover the pool secrets
     print("Checking if tx made it to the chain... DO NOT ABORT")
     time.sleep(commit_interval)
