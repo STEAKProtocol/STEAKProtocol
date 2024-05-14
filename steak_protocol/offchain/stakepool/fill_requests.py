@@ -396,8 +396,8 @@ def fill_request(
         try:
             context.submit_tx(tx)
         except Exception as e:
-            coins = list(map(int, re.findall(r"'coins': (\d+),", str(e))))
-            if "valueNotConserved" in str(e) and len(coins) == 2:
+            coins = list(map(int, re.findall(r"'(?:lovelace|coins)': (\d+)", str(e))))
+            if "valueNotConserved" in str(e) or "3123" in str(e) and len(coins) == 2:
                 print(f"Coinsdiff: {coins[0]} vs {coins[1]}: {coins[1] - coins[0]}")
                 print("Trying to adjust fee and output...")
                 context.submit_tx(
