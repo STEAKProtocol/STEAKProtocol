@@ -1,4 +1,4 @@
-import random
+import secrets
 from hashlib import sha256
 from typing import Optional
 
@@ -147,7 +147,7 @@ def main(
     )
     minted_asset = asset_from_token(stakeholder_auth_nft, 1)
 
-    hash_secrets = [random.randbytes(20) for _ in range(5)]
+    hash_secrets = [secrets.token_bytes(32) for _ in range(5)]
     new_stakeholder_state = StakeHolderState(
         StakePoolParams(
             owner=ScriptCredential(
