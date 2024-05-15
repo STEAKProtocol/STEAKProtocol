@@ -162,9 +162,11 @@ def mine(
                 stakeholder_state.params.chain_auth_nft == stakechain_auth_nft
                 and stakeholder_state.params.stakechain_id == pool_id.encode()
             ):
-                for stakeholder_secret_hashes in all_stakeholder_secret_hashes:
+                for i, stakeholder_secret_hashes in enumerate(
+                    all_stakeholder_secret_hashes
+                ):
                     if stakeholder_state.committed_hashes == stakeholder_secret_hashes:
-                        steakholder_secrets_match = stakeholder_secret_hashes
+                        steakholder_secrets_match = stakeholder_secretss[i]
                         break
             if steakholder_secrets_match is not None:
                 stakeholder_utxo = u
