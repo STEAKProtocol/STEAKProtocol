@@ -108,6 +108,14 @@ def committed_hash_secrets(name: str):
         return [bytes.fromhex(x) for x in d["secrets"]]
 
 
+def all_committed_hash_secrets(name: str):
+    with open(keys_dir / f"{name}.hash_secret") as f:
+        l = [
+            [bytes.fromhex(x) for x in json.loads(l)["secrets"]] for l in f.readlines()
+        ]
+    return l
+
+
 def write_ahead_hash_secrets(name: str, secrets: List[bytes]):
     with open(keys_dir / f"{name}.hash_secret", "a") as f:
         f.write(

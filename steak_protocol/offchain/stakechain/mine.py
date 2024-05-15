@@ -42,6 +42,7 @@ from steak_protocol.offchain.util import (
     custom_sign_message,
     commit_hash_secrets,
     write_ahead_hash_secrets,
+    all_committed_hash_secrets,
 )
 from steak_protocol.onchain.stakechain.stakechain import MineBlockUpdateStake
 from steak_protocol.onchain.stakeholder.stakeholder import UpdateStake
@@ -77,7 +78,7 @@ def compute_validity_interval(genesis_time: int, slot_length: int) -> tuple[int,
 def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
-    stakepool_id: str = "1番",
+    stakepool_id: str = "3番",
     producer_message_hash_hex: Optional[str] = None,
     # number of seconds of validity for the transaction
     # closer to 60 -> more likely to hit an invalid slot from stakechain view
@@ -145,19 +146,27 @@ def mine(
         stakeholder_address
     ), "Wrong stakeholder address"
 
-    stakeholder_secrets = committed_hash_secrets(pool_id)
-    stakeholder_secret_hashes = [sha2_256(x) for x in stakeholder_secrets]
+    stakeholder_secretss = all_committed_hash_secrets(pool_id)
+    all_stakeholder_secret_hashes = [
+        [sha2_256(x) for x in stakeholder_secrets]
+        for stakeholder_secrets in stakeholder_secretss
+    ]
     # prepare stake holder utxo
     stakeholder_utxo = None
     stakeholder_state = None
+    steakholder_secrets_match = None
     for u in context.utxos(stakeholder_address):
         try:
             stakeholder_state = StakeHolderState.from_cbor(u.output.datum.cbor)
             if (
                 stakeholder_state.params.chain_auth_nft == stakechain_auth_nft
-                and stakeholder_state.committed_hashes == stakeholder_secret_hashes
                 and stakeholder_state.params.stakechain_id == pool_id.encode()
             ):
+                for stakeholder_secret_hashes in all_stakeholder_secret_hashes:
+                    if stakeholder_state.committed_hashes == stakeholder_secret_hashes:
+                        steakholder_secrets_match = stakeholder_secret_hashes
+                        break
+            if steakholder_secrets_match is not None:
                 stakeholder_utxo = u
                 break
         except DeserializeException:
@@ -167,6 +176,7 @@ def mine(
     assert (
         stakeholder_utxo is not None
     ), "No stake holder state found. Correct secrets and pool name?"
+    stakeholder_secrets = steakholder_secrets_match
 
     own_index_in_stakeholder_list = (
         stakechain_state.holder_state.stake_holder_ids.index(
