@@ -235,7 +235,11 @@ def mine(
     stakeholder_script = get_ref_utxo(stakeholder_script, context)
     all_ref_input_utxos = sorted_utxos(
         [stakeholder_utxo]
-        + [u for u in [stakechain_script, stakeholder_script] if isinstance(u, UTxO)]
+        + [
+            u
+            for u in [stakechain_script, stakeholder_script, stakepool_script]
+            if isinstance(u, UTxO)
+        ]
     )
     stakeholder_ref_utxo_index = all_ref_input_utxos.index(stakeholder_utxo)
 
