@@ -126,7 +126,7 @@ def mine(
     stakechain_script, _, stakechain_address = get_contract("stakechain")
     stakeholder_script, _, stakeholder_address = get_contract("stakeholder")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
-    stakepool_script, _, _ = get_contract("stakepool")
+    stakepool_script, stakepool_script_hash, _ = get_contract("stakepool")
 
     stakechain_utxo = None
     stakechain_state = None
@@ -288,7 +288,7 @@ def mine(
             {
                 bytes(
                     Address(
-                        staking_part=plutus_script_hash(stakepool_script),
+                        staking_part=stakepool_script_hash,
                         network=network,
                     )
                 ): 0
