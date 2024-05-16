@@ -22,7 +22,7 @@ from steak_protocol.onchain.stakechain import (
     stakechain_upgrade,
 )
 from steak_protocol.onchain.stakepool import stakepool_request, stakepool
-from steak_protocol.utils import network, get_signing_info
+from steak_protocol.utils import network, get_signing_info, get_address
 from steak_protocol.utils.to_script_context import to_address
 
 
@@ -84,19 +84,21 @@ def main(
     airdrop_admin: str = "admin",
     airdrop_expiration: int = int(
         datetime.datetime(
-            2024, 8, 1, tzinfo=datetime.timezone(datetime.timedelta())
+            2024, 9, 1, tzinfo=datetime.timezone(datetime.timedelta())
         ).timestamp()
         * 1000
     ),
+    airdrop_minutxo_receiver: str = "admin",
 ):
     admin_payment_vkey, admin_payment_skey, admin_payment_address = get_signing_info(
         airdrop_admin, network=network
     )
+    airdrop_minutxo_receiver = get_address(airdrop_minutxo_receiver, network=network)
     build_compressed(
         "spending",
         airdrop.__file__,
         args=(
-            to_address(admin_payment_address).to_json(),
+            to_address(airdrop_minutxo_receiver).to_json(),
             f'{{"bytes": "{admin_payment_vkey.hash().payload.hex()}"}}',
             f'{{"int": {airdrop_expiration}}}',
         ),
