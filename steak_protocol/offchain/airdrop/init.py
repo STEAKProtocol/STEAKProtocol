@@ -96,7 +96,7 @@ def main(
         data=pycardano.AlonzoMetadata(
             metadata=pycardano.Metadata(
                 {
-                    674: {"msg": ["Test Airdrop"]},
+                    674: {"msg": ["Initialize Airdrop"]},
                 }
             )
         )

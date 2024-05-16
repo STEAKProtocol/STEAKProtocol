@@ -1,0 +1,171 @@
+{
+  "$schema": "https://cips.cardano.org/cips/cip57/schemas/plutus-blueprint.json",
+  "$id": "https://github.com/aiken-lang/aiken/blob/main/examples/hello_world/plutus.json",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/applicator": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true,
+    "https://cips.cardano.org/cips/cip57": true
+  },
+  "preamble": {
+    "version": "1.0.0",
+    "plutusVersion": "v2",
+    "description": "opshin 0.21.1 Smart Contract",
+    "title": "validator"
+  },
+  "validators": [
+    {
+      "title": "validator",
+      "datum": {
+        "title": "recp",
+        "purpose": "spend",
+        "schema": {
+          "dataType": "bytes"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "purpose": {
+          "oneOf": [
+            "spend"
+          ]
+        },
+        "schema": {
+          "dataType": "integer"
+        }
+      },
+      "parameters": [
+        {
+          "title": "minutxo_addr",
+          "purpose": "spend",
+          "schema": {
+            "dataType": "constructor",
+            "index": 0,
+            "fields": [
+              {
+                "anyOf": [
+                  {
+                    "dataType": "constructor",
+                    "index": 0,
+                    "fields": [
+                      {
+                        "dataType": "bytes",
+                        "title": "credential_hash"
+                      }
+                    ],
+                    "title": "PubKeyCredential"
+                  },
+                  {
+                    "dataType": "constructor",
+                    "index": 1,
+                    "fields": [
+                      {
+                        "dataType": "bytes",
+                        "title": "credential_hash"
+                      }
+                    ],
+                    "title": "ScriptCredential"
+                  }
+                ],
+                "title": "payment_credential"
+              },
+              {
+                "anyOf": [
+                  {
+                    "dataType": "constructor",
+                    "index": 1,
+                    "fields": [],
+                    "title": "NoStakingCredential"
+                  },
+                  {
+                    "dataType": "constructor",
+                    "index": 0,
+                    "fields": [
+                      {
+                        "anyOf": [
+                          {
+                            "dataType": "constructor",
+                            "index": 0,
+                            "fields": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "dataType": "constructor",
+                                    "index": 0,
+                                    "fields": [
+                                      {
+                                        "dataType": "bytes",
+                                        "title": "credential_hash"
+                                      }
+                                    ],
+                                    "title": "PubKeyCredential"
+                                  },
+                                  {
+                                    "dataType": "constructor",
+                                    "index": 1,
+                                    "fields": [
+                                      {
+                                        "dataType": "bytes",
+                                        "title": "credential_hash"
+                                      }
+                                    ],
+                                    "title": "ScriptCredential"
+                                  }
+                                ],
+                                "title": "value"
+                              }
+                            ],
+                            "title": "StakingHash"
+                          },
+                          {
+                            "dataType": "constructor",
+                            "index": 1,
+                            "fields": [
+                              {
+                                "dataType": "integer",
+                                "title": "slot_no"
+                              },
+                              {
+                                "dataType": "integer",
+                                "title": "tx_index"
+                              },
+                              {
+                                "dataType": "integer",
+                                "title": "cert_index"
+                              }
+                            ],
+                            "title": "StakingPtr"
+                          }
+                        ],
+                        "title": "staking_credential"
+                      }
+                    ],
+                    "title": "SomeStakingCredential"
+                  }
+                ],
+                "title": "staking_credential"
+              }
+            ],
+            "title": "Address"
+          }
+        },
+        {
+          "title": "admin",
+          "purpose": "spend",
+          "schema": {
+            "dataType": "bytes"
+          }
+        },
+        {
+          "title": "expiry_date",
+          "purpose": "spend",
+          "schema": {
+            "dataType": "integer"
+          }
+        }
+      ],
+      "compiledCode": "59094901000033332323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232322222223232323232323232323232323232323232323232323232323374a90001bb1498c8c8c8c8c8c8cccccccd401c02002c401840144010400c40084004074dd680e9bae01d375a03a6eb8074074488888888c8c8c94ccd5cd19182b880099823a802a40002a666ae68c8c15c4004cc0dd4018c0a940084c8c94ccd5cd19182c8800998241821a800a805899192999ab9a32305b10013304a32323333350110140130101002100150075003304550011533357346460b6200266096646eb4d55cf199828991bab35573c6660a4607ca00a466ebcdd48011aab9d0011326335738921084b65794572726f72004992210023375e6ea4008d55ce800899319ab9c491084b65794572726f720049922100483025ac4084ccc01407c00400c4c98cd5ce24812c4f7574707574206d75737420686176652076616c7565206f6620325f3530305f303030206c6f76656c616365004984c98cd5ce24811c446174756d206d757374206265207468652074785f6f75745f726566004984004c0ed40184c98cd5ce2481224f6e65204f7574707574206d75737420676f20746f206d696e7574786f5f61646472004984004c8c8c8cc12c00c0054ccd5cd19b88001480004cdc0000981f8010800a803181a2801099319ab9c4911f4f776e6572206d757374207369676e20746865207472616e73616374696f6e0049854ccd5cd19182b88009981ba80418152801099192999ab9a323059100133049304250015009133300300101b016132633573892011c436f6e747261637420686173206e6f74207965742065787069726564004984004c104c104c0b140084c98cd5ce24811f4f776e6572206d757374207369676e20746865207472616e73616374696f6e00498889261001303e5001122222323232533357346460a62002660946076a00490010991918018008800991aab9e3330493025500523375e6ea4008d55ce800899319ab9c4901084b65794572726f7200498c0f940084c94ccd5cd19182a080099825981e2801a40082646460060022002607ca0062a666ae68c8c15040052809800809899319ab9c4901354e6f20646174756d2077617320617474616368656420746f2074686520676976656e207472616e73616374696f6e206f7574707574004988c008004940044004c0bd4008413841384c98cd5ce249104e616d654572726f723a207e626f6f6c004984c98cd5ce2481144e616d654572726f723a2076616c696461746f72004984c98cd5ce2481104e616d654572726f723a2074786f7574004984c98cd5ce2481124e616d654572726f723a2074785f696e666f004984c98cd5ce2481124e616d654572726f723a2074785f696e666f004984c98cd5ce2481184e616d654572726f723a207461726765745f6f7574707574004984c98cd5ce24811f4e616d654572726f723a207265736f6c76655f646174756d5f756e73616665004984c98cd5ce24810e4e616d654572726f723a20726573004984c98cd5ce2481134e616d654572726f723a2072656465656d6572004984c98cd5ce24810f4e616d654572726f723a2072656370004984c98cd5ce2481124e616d654572726f723a20707572706f7365004984c98cd5ce2481174e616d654572726f723a206d696e7574786f5f61646472004984c98cd5ce2481164e616d654572726f723a206c6f7765725f626f756e64004984c98cd5ce2481164e616d654572726f723a206578706972795f64617465004984c98cd5ce2481124e616d654572726f723a20636f6e74657874004984c98cd5ce2481194e616d654572726f723a2061747461636865645f646174756d004984c98cd5ce2481104e616d654572726f723a2061646d696e004984c98cd5ce24811a4e616d654572726f723a20536f6d654f7574707574446174756d004984c98cd5ce24811e4e616d654572726f723a20536f6d654f7574707574446174756d48617368004980048dd59801981880080191802192999aab9f00113263357389210a496e6465784572726f72004984d5d1000800801919980f1bac3004302d0012375c002297ac4230033253335573e002264c66ae7124010a496e6465784572726f72004984d5d100080091801981580091801192999aab9f00113263357389210a496e6465784572726f72004984d5d100080091801192999aab9f00113263357389210a496e6465784572726f72004984d5d100080091801192999aab9f00113263357389210a496e6465784572726f72004984d5d100080091801992999aab9f00113263357389210a496e6465784572726f72004984d5d100080080311803992999aab9f001132633573892010a496e6465784572726f72004984d5d100080080300380580591998089bac300c30200012001137629311805992999aab9f001132633573892010a496e6465784572726f72004984d5d100080091805180f00091998068009119b80002480092000223300f001371e00401c01e01e01e46eacc040c05c0048c03cc0580048c038c94ccd55cf800899319ab9c49010a496e6465784572726f72004984d5d1000800806806911998079112999aab9f00113263357389210a496e6465784572726f720049854ccd5cd19b87002480004d5d0800899980180199b8100248008d5d1000800801111199918081112999aab9f0021001133300300335744004660080026ae8400800800c004888cc8c03c894ccd55cf8008a802099aba0300335742002660040046ae8800400800c88cc8c034894ccd55cf8008a5015333573460066ae840045288998010011aba2001001002222332300d2253335573e0022a0082a666ae68c00cd5d080089aba1001133002002357440020040064601600201446eb4c030c02c0048c02cc0280048dd71805180480091804992999aab9f00113263357389210a496e6465784572726f72004984d5d1000800baf22337120020044646002002002464002a00246aae74dd5000b87235573c6ea80048c94ccd55cf800899319ab9c4910a496e6465784572726f72004984d5d0800800919ba548010cd5d028009bb14988cdd2a400466ae80dd4a8009bb149930129d8799fd8799f581ced5f3f2401d9319140122443970a0d70ccebe678947d3b0dbcbdb000ffd87a80ff004c011e581ced5f3f2401d9319140122443970a0d70ccebe678947d3b0dbcbdb000004c01091b00000191aae1a4000001",
+      "hash": "70bde54a1d41995a5e6cc322b2f7207554712b71c91ee4524462af73"
+    }
+  ]
+}
