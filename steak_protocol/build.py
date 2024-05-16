@@ -1,3 +1,4 @@
+import datetime
 import subprocess
 import sys
 from pathlib import Path
@@ -9,6 +10,7 @@ from opshin.prelude import Token
 
 from steak_protocol.onchain import (
     stakecoin,
+    airdrop,
 )
 from steak_protocol.onchain.stakeholder import (
     stakeholder_auth_nft,
@@ -20,6 +22,8 @@ from steak_protocol.onchain.stakechain import (
     stakechain_upgrade,
 )
 from steak_protocol.onchain.stakepool import stakepool_request, stakepool
+from steak_protocol.utils import network, get_signing_info
+from steak_protocol.utils.to_script_context import to_address
 
 
 def build_compressed(
@@ -76,7 +80,28 @@ def token_from_token_string(token: str) -> Token:
     return Token(bytes.fromhex(policy_id), bytes.fromhex(token_name))
 
 
-def main():
+def main(
+    airdrop_admin: str = "admin",
+    airdrop_expiration: int = int(
+        datetime.datetime(
+            2024, 8, 1, tzinfo=datetime.timezone(datetime.timedelta())
+        ).timestamp()
+        * 1000
+    ),
+):
+    admin_payment_vkey, admin_payment_skey, admin_payment_address = get_signing_info(
+        airdrop_admin, network=network
+    )
+    build_compressed(
+        "spending",
+        airdrop.__file__,
+        args=(
+            to_address(admin_payment_address).to_json(),
+            f'{{"bytes": "{admin_payment_vkey.hash().payload.hex()}"}}',
+            f'{{"int": {airdrop_expiration}}}',
+        ),
+    )
+
     for script in (
         stakecoin,
         stakeholder_auth_nft,
