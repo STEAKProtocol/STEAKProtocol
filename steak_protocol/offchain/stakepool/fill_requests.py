@@ -59,7 +59,7 @@ from opshin.builder import apply_parameters
 
 
 def main(
-    name: str = "bob",
+    name: str = "niels",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     stake_key: str = "*",
     no_stake_key: bool = False,
@@ -277,7 +277,7 @@ def fill_request(
             {
                 bytes(
                     Address(
-                        staking_part=plutus_script_hash(stakepool_script),
+                        staking_part=stakepool_policy_id,
                         network=network,
                     )
                 ): 0
