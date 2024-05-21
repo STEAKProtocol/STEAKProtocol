@@ -46,8 +46,7 @@ from opshin.builder import apply_parameters
 
 
 def main(
-    name: str = "admin",
-    minutxo_address: str = "admin",
+    name: str = "airdrop",
     return_tx: bool = False,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(

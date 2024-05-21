@@ -47,7 +47,7 @@ from opshin.builder import apply_parameters
 
 def main(
     name: str = "creator",
-    minutxo_address: str = "admin",
+    minutxo_address: str = "recipient",
     return_tx: bool = False,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(

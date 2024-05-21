@@ -45,11 +45,12 @@ from opshin.builder import apply_parameters
 
 
 def main(
-    name: str = "admin",
+    name: str = "airdrop",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
-    airdrop_amount: int = 1_000,
-    recipient: str = "recipient",
+    airdrop_amount: int = 1200_000_000,
+    recipients_file: str = "addresses.txt",
     return_tx: bool = False,
+    change_address: str = None,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -76,13 +77,16 @@ def main(
 
     txbuilder = TransactionBuilder(context)
     txbuilder.add_input_address(payment_address)
-    recipient = get_address(recipient, network=network)
-    recipient_airdrop_addr = pycardano.Address(
-        payment_part=airdrop_address.payment_part,
-        staking_part=recipient.staking_part,
-        network=network,
-    )
-    for _ in range(2):
+
+    with open(recipients_file) as f:
+        recipients = set(f.readlines())
+    for recipient_addr in recipients:
+        recipient = pycardano.Address.from_primitive(recipient_addr.strip())
+        recipient_airdrop_addr = pycardano.Address(
+            payment_part=airdrop_address.payment_part,
+            staking_part=recipient.staking_part,
+            network=network,
+        )
         txbuilder.add_output(
             with_min_lovelace(
                 TransactionOutput(
@@ -104,7 +108,11 @@ def main(
     )
     tx = txbuilder.build_and_sign(
         signing_keys=[payment_skey],
-        change_address=payment_address,
+        change_address=(
+            payment_address
+            if change_address is None
+            else pycardano.Address.from_primitive(change_address)
+        ),
     )
 
     context.submit_tx(tx)
