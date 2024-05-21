@@ -126,7 +126,7 @@ def mine(
     stakechain_script, _, stakechain_address = get_contract("stakechain")
     stakeholder_script, _, stakeholder_address = get_contract("stakeholder")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
-    stakepool_script, _, _ = get_contract("stakepool")
+    stakepool_script, stakepool_script_hash, _ = get_contract("stakepool")
 
     stakechain_utxo = None
     stakechain_state = None
@@ -162,9 +162,11 @@ def mine(
                 stakeholder_state.params.chain_auth_nft == stakechain_auth_nft
                 and stakeholder_state.params.stakechain_id == pool_id.encode()
             ):
-                for stakeholder_secret_hashes in all_stakeholder_secret_hashes:
+                for i, stakeholder_secret_hashes in enumerate(
+                    all_stakeholder_secret_hashes
+                ):
                     if stakeholder_state.committed_hashes == stakeholder_secret_hashes:
-                        steakholder_secrets_match = stakeholder_secret_hashes
+                        steakholder_secrets_match = stakeholder_secretss[i]
                         break
             if steakholder_secrets_match is not None:
                 stakeholder_utxo = u
@@ -235,7 +237,11 @@ def mine(
     stakeholder_script = get_ref_utxo(stakeholder_script, context)
     all_ref_input_utxos = sorted_utxos(
         [stakeholder_utxo]
-        + [u for u in [stakechain_script, stakeholder_script] if isinstance(u, UTxO)]
+        + [
+            u
+            for u in [stakechain_script, stakeholder_script, stakepool_script]
+            if isinstance(u, UTxO)
+        ]
     )
     stakeholder_ref_utxo_index = all_ref_input_utxos.index(stakeholder_utxo)
 
@@ -288,7 +294,7 @@ def mine(
             {
                 bytes(
                     Address(
-                        staking_part=plutus_script_hash(stakepool_script),
+                        staking_part=stakepool_script_hash,
                         network=network,
                     )
                 ): 0

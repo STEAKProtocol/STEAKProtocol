@@ -17,6 +17,7 @@ from pycardano import (
 from steak_protocol.onchain import one_shot_nft, airdrop
 from steak_protocol.onchain.stakechain import stakechain
 from steak_protocol.onchain.stakeholder import stakeholder
+from steak_protocol.onchain.stakepool import stakepool
 from steak_protocol.utils import network, get_signing_info
 from steak_protocol.utils.contracts import get_contract, get_ref_utxo, module_name
 from steak_protocol.utils.network import context, show_tx
@@ -66,6 +67,7 @@ def main(compress: bool = True):
         airdrop,
         stakechain,
         stakeholder,
+        stakepool,
     ]:
         contract_script, _, _ = get_contract(module_name(contract), compressed=compress)
         tx = submit_ref_script(contract_script, module_name(contract))
