@@ -82,16 +82,17 @@ def main(
         staking_part=recipient.staking_part,
         network=network,
     )
-    txbuilder.add_output(
-        with_min_lovelace(
-            TransactionOutput(
-                recipient_airdrop_addr,
-                amount=value_from_token(stakecoin, airdrop_amount),
-                datum=recipient.payment_part.payload,
-            ),
-            context,
+    for _ in range(2):
+        txbuilder.add_output(
+            with_min_lovelace(
+                TransactionOutput(
+                    recipient_airdrop_addr,
+                    amount=value_from_token(stakecoin, airdrop_amount),
+                    datum=recipient.payment_part.payload,
+                ),
+                context,
+            )
         )
-    )
     txbuilder.auxiliary_data = pycardano.AuxiliaryData(
         data=pycardano.AlonzoMetadata(
             metadata=pycardano.Metadata(

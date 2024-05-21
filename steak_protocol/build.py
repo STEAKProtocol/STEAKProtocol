@@ -81,14 +81,14 @@ def token_from_token_string(token: str) -> Token:
 
 
 def main(
-    airdrop_admin: str = "admin",
+    airdrop_admin: str = "airdrop",
     airdrop_expiration: int = int(
         datetime.datetime(
-            2024, 9, 1, tzinfo=datetime.timezone(datetime.timedelta())
+            2025, 1, 1, tzinfo=datetime.timezone(datetime.timedelta())
         ).timestamp()
         * 1000
     ),
-    airdrop_minutxo_receiver: str = "admin",
+    airdrop_minutxo_receiver: str = "recipient",
 ):
     admin_payment_vkey, admin_payment_skey, admin_payment_address = get_signing_info(
         airdrop_admin, network=network

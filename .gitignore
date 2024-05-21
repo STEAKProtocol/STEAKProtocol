@@ -9,6 +9,7 @@ steak_protocol/offchain/distribute.py
 metadata.sh
 *.json
 db
+addresses*.txt
 # Created by https://www.toptal.com/developers/gitignore/api/python,pycharm+all,latex
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm+all,latex
 

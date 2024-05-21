@@ -63,9 +63,9 @@ def submit_ref_script(contract_script: PlutusV2Script, name: str):
 
 def main(compress: bool = True):
     for contract in [
+        airdrop,
         stakechain,
         stakeholder,
-        airdrop,
     ]:
         contract_script, _, _ = get_contract(module_name(contract), compressed=compress)
         tx = submit_ref_script(contract_script, module_name(contract))
