@@ -21,6 +21,8 @@ from steak_protocol.offchain.util import (
     token_from_string,
     asset_from_token,
     value_from_token,
+    ContractVersion,
+    VERSION_0,
 )
 from steak_protocol.onchain.stakechain.stakechain_v0 import (
     DeregisterStake,
@@ -47,13 +49,16 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     pool_id: str = "1番",
+    stakechain_version: ContractVersion = VERSION_0,
 ):
     pool_id = pool_id.encode()
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
     )
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain")
+    stakechain_script, _, stakechain_address = get_contract(
+        "stakechain_" + stakechain_version
+    )
     stakeholder_script, _, stakeholder_address = get_contract("stakeholder")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
     stakepool_script, _, _ = get_contract("stakepool")

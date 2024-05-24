@@ -92,7 +92,7 @@ def fill_request(
 ):
     _, payment_skey, payment_address = get_signing_info(name, network=network)
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain")
+    stakechain_script, _, stakechain_address = get_contract("stakechain_v0")
     stakeholder_script, _, stakeholder_address = get_contract("stakeholder")
     stakepool_script, stakepool_policy_id, stakepool_address = get_contract("stakepool")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)

@@ -34,6 +34,8 @@ from steak_protocol.offchain.util import (
     value_from_token,
     commit_hash_secrets,
     write_ahead_hash_secrets,
+    ContractVersion,
+    VERSION_0,
 )
 from steak_protocol.onchain.stakechain.stakechain_v0 import RegisterStake
 from steak_protocol.onchain.stakepool.stakepool import (
@@ -68,6 +70,7 @@ def main(
     skip_warning: bool = False,
     return_tx: bool = False,
     return_address: Optional[str] = None,
+    stakechain_version: ContractVersion = VERSION_0,
 ):
     print(
         "Warning: if you previously ran this script with the same name, the secrets will be overwritten. Press enter to continue."
@@ -79,7 +82,9 @@ def main(
         name, network=network
     )
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain")
+    stakechain_script, _, stakechain_address = get_contract(
+        "stakechain_" + stakechain_version
+    )
     _, _, stakeholder_address = get_contract("stakeholder")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
     stakepool_script, _, _ = get_contract("stakepool")

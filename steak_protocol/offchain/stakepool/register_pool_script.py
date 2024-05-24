@@ -24,6 +24,8 @@ from steak_protocol.offchain.util import (
     token_from_string,
     STAKE_CHAIN_AUTH_NFT,
     amount_of_token_in_value,
+    ContractVersion,
+    VERSION_0,
 )
 from steak_protocol.utils import get_signing_info, network, context
 from steak_protocol.utils.contracts import get_contract
@@ -35,11 +37,12 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     return_tx: bool = False,
+    stakechain_version: ContractVersion = VERSION_0,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
     )
-    _, _, stakechain_address = get_contract("stakechain")
+    _, _, stakechain_address = get_contract("stakechain_" + stakechain_version)
     _, _, stakeholder_address = get_contract("stakeholder")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
 
@@ -65,12 +68,6 @@ def main(
     )
     stakeholder_auth_nft_script = apply_parameters(
         stakeholder_auth_nft_script_raw, stakechain_auth_nft
-    )
-    stakeholder_auth_nft_policy_id = script_hash(stakeholder_auth_nft_script)
-    stakeholder_auth_nft_token_name = stakechain_auth_nft.token_name
-    stakeholder_auth_nft = Token(
-        stakeholder_auth_nft_policy_id.payload,
-        stakeholder_auth_nft_token_name,
     )
     stakepool_script, _, stakepool_address = get_contract("stakepool")
 

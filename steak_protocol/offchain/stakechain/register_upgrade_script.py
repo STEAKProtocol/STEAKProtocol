@@ -14,17 +14,12 @@ from pycardano import (
 )
 
 from steak_protocol.offchain.util import (
-    sorted_utxos,
-    with_min_lovelace,
     STAKE_CHAIN_AUTH_NFT,
     amount_of_token_in_value,
     token_from_string,
     asset_from_token,
-)
-from steak_protocol.onchain.stakechain.stakechain_v0 import MineBlock, UpgradeProtocol
-from steak_protocol.onchain.stakechain.stakechain_upgrade_v0 import (
-    ChainUpgradeProposal,
-    ChainUpgrade,
+    ContractVersion,
+    VERSION_0,
 )
 from steak_protocol.onchain.types import (
     StakeChainV0State,
@@ -50,6 +45,7 @@ def main(
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     upgrade_len: int = 2,
     return_tx: bool = False,
+    stakechain_upgrade_version: ContractVersion = VERSION_0,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -73,7 +69,7 @@ def main(
     assert stakechain_utxo is not None, "No stake chain state found"
 
     stakechain_upgrade_script_raw, _, _ = get_contract(
-        "stakechain_upgrade", compressed=True
+        "stakechain_upgrade_" + stakechain_upgrade_version, compressed=True
     )
     stakechain_upgrade_script = apply_parameters(
         stakechain_upgrade_script_raw,

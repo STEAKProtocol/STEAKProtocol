@@ -21,6 +21,8 @@ from steak_protocol.offchain.util import (
     sorted_utxos,
     with_min_lovelace,
     asset_from_token,
+    ContractVersion,
+    VERSION_0,
 )
 from steak_protocol.onchain import stakecoin
 from steak_protocol.onchain.stakechain.stakechain_auth_nft import one_shot_nft_name
@@ -88,6 +90,7 @@ def main(
     upgrade_length: int = 7,
     return_tx: bool = False,
     return_addr: Optional[str] = None,
+    stakechain_version: ContractVersion = VERSION_0,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -127,7 +130,7 @@ def main(
         stakeholder_auth_nft_script_raw, stakechain_auth_nft
     )
     stakeholder_auth_nft_policy_id = script_hash(stakeholder_auth_nft_script)
-    _, _, stakechain_address = get_contract("stakechain")
+    _, _, stakechain_address = get_contract("stakechain_" + stakechain_version)
 
     # rebuild script with parameters
     stakechain_upgrade_script_raw, _, _ = get_contract(

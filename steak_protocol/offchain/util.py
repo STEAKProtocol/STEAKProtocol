@@ -1,7 +1,7 @@
 import datetime
 import json
 from hashlib import sha256
-from typing import List, Union
+from typing import List, Union, Literal
 
 import pycardano
 
@@ -145,3 +145,8 @@ def commit_hash_secrets(name: str, secrets: List[bytes]):
 
 def custom_sign_message(secret: bytes, message: bytes) -> bytes:
     return sha256(message + secret).digest()
+
+
+ContractVersion = Literal["v0", "v1"]
+VERSION_0 = "v0"
+VERSION_1 = "v1"

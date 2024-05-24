@@ -22,8 +22,10 @@ from steak_protocol.offchain.util import (
     amount_of_token_in_value,
     token_from_string,
     asset_from_token,
+    ContractVersion,
+    VERSION_0,
 )
-from steak_protocol.onchain.stakechain.stakechain_v0 import MineBlock, UpgradeProtocol
+from steak_protocol.onchain.stakechain.stakechain_v0 import UpgradeProtocol
 from steak_protocol.onchain.stakechain.stakechain_upgrade_v0 import (
     ChainUpgradeProposal,
     ChainUpgrade,
@@ -47,35 +49,27 @@ from steak_protocol.utils.to_script_context import (
 from opshin.builder import apply_parameters
 
 
-def compute_current_slot(genesis_time: int, slot_length: int) -> int:
-    current_time = int(datetime.datetime.now().timestamp() * 1000)
-    return (current_time - genesis_time) // slot_length
-
-
-def compute_validity_interval(genesis_time: int, slot_length: int) -> tuple[int, int]:
-    suggested_slot = compute_current_slot(genesis_time, slot_length)
-    min_acceptable_lower_bound = genesis_time + slot_length * suggested_slot
-    max_acceptable_upper_bound = min_acceptable_lower_bound + slot_length
-    return min_acceptable_lower_bound, max_acceptable_upper_bound
-
-
 def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     previous_producer_states_cbor: List[str] = None,
     proposal_cbor: str = None,
     return_tx: bool = False,
+    stakechain_version: ContractVersion = VERSION_0,
+    stakechain_upgrade_version: ContractVersion = VERSION_0,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
     )
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain")
+    stakechain_script, _, stakechain_address = get_contract(
+        "stakechain_" + stakechain_version
+    )
     stakechain_script = get_ref_utxo(stakechain_script, context)
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
 
     stakechain_upgrade_script_raw, _, _ = get_contract(
-        "stakechain_upgrade", compressed=True
+        "stakechain_upgrade_" + stakechain_upgrade_version, compressed=True
     )
     stakechain_upgrade_script = apply_parameters(
         stakechain_upgrade_script_raw,

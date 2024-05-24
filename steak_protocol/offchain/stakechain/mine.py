@@ -43,6 +43,8 @@ from steak_protocol.offchain.util import (
     commit_hash_secrets,
     write_ahead_hash_secrets,
     all_committed_hash_secrets,
+    ContractVersion,
+    VERSION_0,
 )
 from steak_protocol.onchain.stakechain.stakechain_v0 import MineBlockUpdateStake
 from steak_protocol.onchain.stakeholder.stakeholder import UpdateStake
@@ -118,12 +120,13 @@ def mine(
     producer_message_hash_hex: Optional[str] = None,
     tx_validity_width: int = 40,
     commit_interval: int = 120,
+    stakechain_version: ContractVersion = VERSION_0,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
     )
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain")
+    stakechain_script, _, stakechain_address = get_contract("stakechain_" + version)
     stakeholder_script, _, stakeholder_address = get_contract("stakeholder")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
     stakepool_script, stakepool_script_hash, _ = get_contract("stakepool")
