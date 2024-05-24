@@ -25,9 +25,9 @@ from steak_protocol.offchain.util import (
 from steak_protocol.onchain import stakecoin
 from steak_protocol.onchain.stakechain.stakechain_auth_nft import one_shot_nft_name
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     CoreChainState,
-    StakeChainParams,
+    StakeChainV0Params,
     StakeHolderRegistrations,
     ProducerState,
 )
@@ -140,8 +140,8 @@ def main(
     )
     stakechain_upgrade_script_hash = plutus_script_hash(stakechain_upgrade_script)
 
-    stake_chain_initial_state = StakeChainState(
-        params=StakeChainParams(
+    stake_chain_initial_state = StakeChainV0State(
+        params=StakeChainV0Params(
             stakeholder_address=to_address(stakeholder_address),
             stakeholder_auth_nft=Token(
                 stakeholder_auth_nft_policy_id.payload,

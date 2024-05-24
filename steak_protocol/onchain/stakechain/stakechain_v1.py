@@ -67,29 +67,51 @@ StateRedeemer = Union[
 ]
 
 
+def make_ex_range(
+    lower_bound: POSIXTime,
+    upper_bound: POSIXTime,
+) -> POSIXTimeRange:
+    """
+    Create a bounded interval from the given time `lower_bound` up to the given `upper_bound`, excluding the given times
+    """
+    return POSIXTimeRange(
+        LowerBoundPOSIXTime(FinitePOSIXTime(lower_bound), FalseData()),
+        UpperBoundPOSIXTime(FinitePOSIXTime(upper_bound), FalseData()),
+    )
+
+
 def check_slot_of_tx(
     suggested_slot: int,
     genesis_time: POSIXTime,
     slot_length: POSIXTime,
+    slot_leader_interval: int,
     tx_info: TxInfo,
 ) -> None:
     """
     Computes the slot of the current transaction
     and makes sure that the validity interval is entirely within
     the current slot.
+
+    ADDITION in V1:
+    The range is now expanded by the slot leader interval amount.
+    The given slot number has to align with the first slot of the slot leader interval
+    (this needs to be checked before calling the function)
     """
     valid_range = tx_info.valid_range
     min_acceptable_lower_bound = genesis_time + slot_length * suggested_slot
-    max_acceptable_upper_bound = min_acceptable_lower_bound + slot_length
+    max_acceptable_upper_bound = (
+        min_acceptable_lower_bound + slot_length * slot_leader_interval
+    )
     assert contains(
-        make_range(min_acceptable_lower_bound, max_acceptable_upper_bound), valid_range
-    ), "Transaction not in current slot"
+        make_ex_range(min_acceptable_lower_bound, max_acceptable_upper_bound),
+        valid_range,
+    ), "Transaction not in current slot leader interval"
 
 
 def check_valid_stake_holder(
     stake_holder_state: StakeHolderState,
     stake_output: TxOut,
-    own_prev_state: StakeChainState,
+    own_prev_state: StakeChainV1State,
     tx_info: TxInfo,
 ):
     """
@@ -111,21 +133,41 @@ def check_valid_stake_holder(
 
 
 def new_chain_state(
-    own_next_state: StakeChainState,
-    own_prev_state: StakeChainState,
+    own_next_state: StakeChainV1State,
+    own_prev_state: StakeChainV1State,
     tx_info: TxInfo,
     elected_slot_leader: int,
 ) -> CoreChainState:
+    """
+    Generate a new chain state based on the previous state and the transaction info.
+
+    ADDITION in V1:
+    The slot leader interval denotes a number of slots for which the slot leader stays unchanged.
+    This allows dynamically adjusting how often blocks get mined, without changing the slot length
+    and thus the speed of slot counting.
+    This is implemented by simply forcing the current slot to be a multiple of the slot leader interval.
+    """
     # check that the chain state is correct
     new_slot_number = own_next_state.chain_state.slot_number
     params = own_prev_state.params
+    slot_leader_interval = params.slot_leader_interval
     # check that the slot number looks correct
     check_slot_of_tx(
         new_slot_number,
         params.genesis_time,
         params.slot_length,
+        slot_leader_interval,
         tx_info,
     )
+    # check that slot number is strictly increasing
+    assert (
+        new_slot_number > own_prev_state.chain_state.slot_number
+    ), "Slot number not strictly increasing"
+    # check that slot number is multiple of slot leader interval
+    assert (
+        new_slot_number % slot_leader_interval == 0
+    ), "Slot number not multiple of slot leader interval"
+    # block number is monotonously increasing by one
     block_number = own_prev_state.chain_state.block_number + 1
     return CoreChainState(
         block_number,
@@ -141,7 +183,7 @@ def new_chain_state(
 
 
 def compute_slot_leader(
-    state: StakeChainState,
+    state: StakeChainV1State,
     current_slot_number: int,
     slot_leader_number: int,
 ) -> int:
@@ -170,7 +212,7 @@ def compute_slot_leader(
 
 
 def check_correct_producer(
-    prev_state: StakeChainState,
+    prev_state: StakeChainV1State,
     slot_number: int,
     redeemer: MineBlockUpdateStake,
     tx_info: TxInfo,
@@ -222,7 +264,7 @@ def check_correct_producer(
 
 
 def check_correct_mine_value_update(
-    own_prev_state: StakeChainState,
+    own_prev_state: StakeChainV1State,
     own_prev_input: TxOut,
     own_next_output: TxOut,
 ):
@@ -243,7 +285,7 @@ def check_correct_mine_value_update(
 
 
 def check_correct_register_value_update(
-    own_prev_state: StakeChainState,
+    own_prev_state: StakeChainV1State,
     own_prev_input: TxOut,
     own_next_output: TxOut,
 ):
@@ -270,8 +312,8 @@ def check_correct_update_value_update(
 
 
 def check_correct_new_registered_state(
-    own_next_state: StakeChainState,
-    own_prev_state: StakeChainState,
+    own_next_state: StakeChainV1State,
+    own_prev_state: StakeChainV1State,
     own_pref_ref_input: TxOutRef,
     stake_holder_state: StakeHolderState,
     stake_holder_output: TxOut,
@@ -290,7 +332,7 @@ def check_correct_new_registered_state(
         [added_holder_id] + prev_holder_state.stake_holder_ids,
     )
     # check that the overall state is correctly updated
-    new_desired_state = StakeChainState(
+    new_desired_state = StakeChainV1State(
         own_prev_state.params,
         new_desired_holder_state,
         own_prev_state.chain_state,
@@ -302,8 +344,8 @@ def check_correct_new_registered_state(
 
 
 def check_correct_new_deregistered_state(
-    own_next_state: StakeChainState,
-    own_prev_state: StakeChainState,
+    own_next_state: StakeChainV1State,
+    own_prev_state: StakeChainV1State,
     own_prev_ref_input: TxOutRef,
     stake_holder_state: StakeHolderState,
     holder_index: int,
@@ -331,7 +373,7 @@ def check_correct_new_deregistered_state(
         new_desired_holder_state = prev_holder_state
         skip_holder_delta = 0
     # check that the overall state is correctly updated
-    new_desired_state = StakeChainState(
+    new_desired_state = StakeChainV1State(
         own_prev_state.params,
         new_desired_holder_state,
         own_prev_state.chain_state,
@@ -343,8 +385,8 @@ def check_correct_new_deregistered_state(
 
 
 def check_correct_new_updated_state(
-    own_next_state: StakeChainState,
-    own_prev_state: StakeChainState,
+    own_next_state: StakeChainV1State,
+    own_prev_state: StakeChainV1State,
     own_prev_ref_input: TxOutRef,
     prev_stake_holder_state: StakeHolderState,
     stake_holder_output: TxOut,
@@ -368,7 +410,7 @@ def check_correct_new_updated_state(
         prev_holder_state.stake_holder_ids,
     )
     # check that the overall state is correctly updated
-    new_desired_state = StakeChainState(
+    new_desired_state = StakeChainV1State(
         own_prev_state.params,
         new_desired_holder_state,
         own_prev_state.chain_state,
@@ -380,8 +422,8 @@ def check_correct_new_updated_state(
 
 
 def check_correct_new_updated_mined_state(
-    own_next_state: StakeChainState,
-    own_prev_state: StakeChainState,
+    own_next_state: StakeChainV1State,
+    own_prev_state: StakeChainV1State,
     own_prev_input_ref: TxOutRef,
     tx_info: TxInfo,
     redeemer: MineBlockUpdateStake,
@@ -418,16 +460,12 @@ def check_correct_new_updated_mined_state(
         tx_info,
         redeemer.elected_slot_leader,
     )
-    # check that slot number is strictly increasing
-    assert (
-        generated_new_chain_state.slot_number > own_prev_state.chain_state.slot_number
-    ), "Slot number not strictly increasing"
     desired_new_producer_state = ProducerState(
         redeemer.slot_leader_sig,
         aux,
         sha2_256(own_prev_state.producer_state.to_cbor()),
     )
-    desired_new_state = StakeChainState(
+    desired_new_state = StakeChainV1State(
         params,
         new_desired_holder_state,
         generated_new_chain_state,
@@ -440,7 +478,9 @@ def check_correct_new_updated_mined_state(
     return generated_new_chain_state
 
 
-def number_stake_holders_spent(own_prev_state: StakeChainState, tx_info: TxInfo) -> int:
+def number_stake_holders_spent(
+    own_prev_state: StakeChainV1State, tx_info: TxInfo
+) -> int:
     stakeholder_auth_nft = own_prev_state.params.stakeholder_auth_nft
     # check that no other auth nft is spent
     return sum(
@@ -451,19 +491,19 @@ def number_stake_holders_spent(own_prev_state: StakeChainState, tx_info: TxInfo)
     )
 
 
-def check_no_stake_holder_spent(own_prev_state: StakeChainState, tx_info: TxInfo):
+def check_no_stake_holder_spent(own_prev_state: StakeChainV1State, tx_info: TxInfo):
     assert (
         number_stake_holders_spent(own_prev_state, tx_info) == 0
     ), "Tried to unlock tokens from registered holder"
 
 
-def check_one_stake_holder_spent(own_prev_state: StakeChainState, tx_info: TxInfo):
+def check_one_stake_holder_spent(own_prev_state: StakeChainV1State, tx_info: TxInfo):
     assert (
         number_stake_holders_spent(own_prev_state, tx_info) == 1
     ), "Tried to unlock more tokens from registered holder"
 
 
-def check_burn_one_auth_nft(own_prev_state: StakeChainState, tx_info: TxInfo):
+def check_burn_one_auth_nft(own_prev_state: StakeChainV1State, tx_info: TxInfo):
     stakeholder_auth_nft = own_prev_state.params.stakeholder_auth_nft
     # check that the stake holder auth nft is burned
     check_mint_exactly_n_with_name(
@@ -474,7 +514,7 @@ def check_burn_one_auth_nft(own_prev_state: StakeChainState, tx_info: TxInfo):
     )
 
 
-def check_mint_one_auth_nft(own_prev_state: StakeChainState, tx_info: TxInfo):
+def check_mint_one_auth_nft(own_prev_state: StakeChainV1State, tx_info: TxInfo):
     stakeholder_auth_nft = own_prev_state.params.stakeholder_auth_nft
     # check that the stake holder auth nft is minted
     check_mint_exactly_n_with_name(
@@ -485,13 +525,13 @@ def check_mint_one_auth_nft(own_prev_state: StakeChainState, tx_info: TxInfo):
     )
 
 
-def check_no_auth_nft_mint(own_prev_state: StakeChainState, tx_info: TxInfo):
+def check_no_auth_nft_mint(own_prev_state: StakeChainV1State, tx_info: TxInfo):
     stakeholder_auth_nft = own_prev_state.params.stakeholder_auth_nft
     assert not stakeholder_auth_nft.policy_id in tx_info.mint.keys(), "Auth NFT minted"
 
 
 def validator(
-    state: StakeChainState, redeemer: StateRedeemer, context: ScriptContext
+    state: StakeChainV1State, redeemer: StateRedeemer, context: ScriptContext
 ) -> None:
     tx_info = context.tx_info
 
@@ -511,7 +551,9 @@ def validator(
         own_next_output = resolve_linear_output(
             own_prev_input, tx_info, redeemer.new_state_index
         )
-        own_next_state: StakeChainState = resolve_datum_unsafe(own_next_output, tx_info)
+        own_next_state: StakeChainV1State = resolve_datum_unsafe(
+            own_next_output, tx_info
+        )
         # Always check that the output is reasonably sized
         check_output_reasonably_sized(own_next_output, own_next_state, 15000)
 

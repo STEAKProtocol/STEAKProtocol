@@ -22,11 +22,11 @@ from steak_protocol.offchain.util import (
     asset_from_token,
     value_from_token,
 )
-from steak_protocol.onchain.stakechain.stakechain import (
+from steak_protocol.onchain.stakechain.stakechain_v0 import (
     DeregisterStake,
 )
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     StakeHolderState,
     StakeHolderRegistrations,
 )
@@ -71,7 +71,7 @@ def main(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
@@ -122,7 +122,7 @@ def main(
         ),
     )
 
-    new_stakechain_state = StakeChainState(
+    new_stakechain_state = StakeChainV0State(
         params=stakechain_state.params,
         holder_state=new_holder_registrations,
         chain_state=stakechain_state.chain_state,

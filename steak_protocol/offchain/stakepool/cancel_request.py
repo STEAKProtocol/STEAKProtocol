@@ -13,7 +13,7 @@ from steak_protocol.onchain.stakepool.stakepool_request import (
     RemoveStakeRequest,
     CancelRequest,
 )
-from steak_protocol.onchain.types import StakeChainState
+from steak_protocol.onchain.types import StakeChainV0State
 from steak_protocol.offchain.util import (
     with_min_lovelace,
     asset_from_token,
@@ -51,7 +51,7 @@ def main(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u

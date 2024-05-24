@@ -23,13 +23,13 @@ from steak_protocol.offchain.util import (
     token_from_string,
     asset_from_token,
 )
-from steak_protocol.onchain.stakechain.stakechain import MineBlock, UpgradeProtocol
-from steak_protocol.onchain.stakechain.stakechain_upgrade import (
+from steak_protocol.onchain.stakechain.stakechain_v0 import MineBlock, UpgradeProtocol
+from steak_protocol.onchain.stakechain.stakechain_upgrade_v0 import (
     ChainUpgradeProposal,
     ChainUpgrade,
 )
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     CoreChainState,
     StakeHolderState,
     ProducerState,
@@ -90,7 +90,7 @@ def main(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
@@ -119,7 +119,7 @@ def main(
     else:
         new_params = upgrade_proposal.upgrade_params
 
-    new_stakechain_state = StakeChainState(
+    new_stakechain_state = StakeChainV0State(
         params=new_params,
         holder_state=stakechain_state.holder_state,
         chain_state=stakechain_state.chain_state,

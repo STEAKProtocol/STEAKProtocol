@@ -44,10 +44,10 @@ from steak_protocol.offchain.util import (
     write_ahead_hash_secrets,
     all_committed_hash_secrets,
 )
-from steak_protocol.onchain.stakechain.stakechain import MineBlockUpdateStake
+from steak_protocol.onchain.stakechain.stakechain_v0 import MineBlockUpdateStake
 from steak_protocol.onchain.stakeholder.stakeholder import UpdateStake
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     CoreChainState,
     StakeHolderState,
     ProducerState,
@@ -134,7 +134,7 @@ def mine(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
@@ -208,7 +208,7 @@ def mine(
         if producer_message_hash_hex is None
         else SomeOutputDatumHash(datum_hash=bytes.fromhex(producer_message_hash_hex))
     )
-    new_stakechain_state = StakeChainState(
+    new_stakechain_state = StakeChainV0State(
         params=stakechain_state.params,
         holder_state=stakechain_state.holder_state,
         chain_state=new_core_chain_state,

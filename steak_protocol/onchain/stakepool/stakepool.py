@@ -120,7 +120,7 @@ def validator(
         own_input_state.params == own_output_state.params
     ), "Stake holder params must be preserved"
     chain_input = tx_info.inputs[redeemer.chain_input_index].resolved
-    chain_input_state: StakeChainState = resolve_datum_unsafe(chain_input, tx_info)
+    chain_input_state: StakeChainV0State = resolve_datum_unsafe(chain_input, tx_info)
     chain_output = tx_info.outputs[redeemer.chain_output_index]
     # we just ensure that the chain logic is correct
     chain_auth_nft = own_pool_state_params.chain_auth_nft
@@ -156,7 +156,7 @@ def validator(
     else:
         pool_input_state_datum: SomeOutputDatum = own_input_state.aux
         pool_input_state: PoolState = pool_input_state_datum.datum
-        chain_output_state: StakeChainState = resolve_datum_unsafe(
+        chain_output_state: StakeChainV0State = resolve_datum_unsafe(
             chain_output, tx_info
         )
         # no block mining
