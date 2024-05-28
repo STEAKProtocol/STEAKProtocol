@@ -368,6 +368,9 @@ def mine(
             )
         )
     )
+    txbuilder.collaterals = sorted(
+        payment_utxos, key=lambda x: x.output.amount.coin, reverse=True
+    )[:3]
     tx = txbuilder.build_and_sign(
         signing_keys=[payment_skey],
         change_address=payment_address,
