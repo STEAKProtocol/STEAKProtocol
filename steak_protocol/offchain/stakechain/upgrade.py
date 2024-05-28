@@ -3,6 +3,7 @@ from typing import List
 
 import fire
 import pycardano
+import requests
 from opshin.ledger.api_v2 import PubKeyCredential, NoOutputDatum, SomeOutputDatum
 from opshin.prelude import Nothing
 from pycardano import (
@@ -47,6 +48,46 @@ from steak_protocol.utils.to_script_context import (
 )
 
 from opshin.builder import apply_parameters
+
+
+def previous_producer_states_from_kupo(
+    kupo_url: str,
+    stakechain_addr: str,
+    context: pycardano.ChainContext,
+):
+    """
+    Assuming that a kupo instance is running at the given url with the match pattern matching the stakechain address
+    and no pruning, we can obtain the previous producer states from the kupo instance.
+
+    Returns preceding producer states in the order of most recent first.
+    Returns only those states that resolve to the same message
+    """
+    utxo_url = "{}/matches/{}?order=most_recent_first".format(kupo_url, stakechain_addr)
+    matches = requests.get(utxo_url).json()
+    initial_producer_message_hash = None
+    producer_states = []
+    for match in matches:
+        dtm_hash = match["datum_hash"]
+        if dtm_hash is None:
+            break
+        datum_cbor = requests.get("{}/datums/{}".format(kupo_url, dtm_hash)).json()[
+            "datum"
+        ]
+        chain_state = StakeChainV0State.from_cbor(datum_cbor)
+        producer_state = chain_state.producer_state
+        if isinstance(producer_state.auxiliary, NoOutputDatum):
+            break
+        if isinstance(producer_state.auxiliary, SomeOutputDatum):
+            producer_message_hash = datum_hash(producer_state.auxiliary.datum).payload
+        else:
+            producer_message_hash = producer_state.auxiliary.datum_hash
+        if (
+            initial_producer_message_hash is None
+            or initial_producer_message_hash == producer_message_hash
+        ):
+            initial_producer_message_hash = producer_message_hash
+            producer_states.append(producer_state)
+    return producer_states
 
 
 def main(
