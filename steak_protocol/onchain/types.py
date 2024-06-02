@@ -5,7 +5,7 @@ Owner = Union[PubKeyCredential, ScriptCredential]
 
 
 @dataclass
-class StakeChainParams(PlutusData):
+class StakeChainV0Params(PlutusData):
     CONSTR_ID = 0
     # The address of the stake holder (NOTE: the position of this should not change in upgrades)
     stakeholder_address: Address
@@ -29,6 +29,35 @@ class StakeChainParams(PlutusData):
     num_slot_leaders: int
     # max number of holders (for which MineBlock still goes through)
     max_holders: int
+
+
+@dataclass
+class StakeChainV1Params(PlutusData):
+    CONSTR_ID = 0
+    # The address of the stake holder (NOTE: the position of this should not change in upgrades)
+    stakeholder_address: Address
+    # The unique nft identifying valid stake holders
+    stakeholder_auth_nft: Token
+    # slot length in milliseconds
+    slot_length: POSIXTime
+    # The token to be distributed as reward
+    stake_coin: Token
+    # fraction of remaining tokens to distribute each block (recommended: Fraction(5, 10000000))
+    fraction_per_block: Fraction
+    # The unique NFT identifying the correct stake chain thread
+    auth_nft: Token
+    # Genesis time
+    genesis_time: POSIXTime
+    # Fee for registering a stake holder in stake coin
+    register_fee: int
+    # Upgrade approval contract
+    upgrade_approval: Owner
+    # number of slot leaders per slot
+    num_slot_leaders: int
+    # max number of holders (for which MineBlock still goes through)
+    max_holders: int
+    # the interval for which the same slot leader is chosen
+    slot_leader_interval: int
 
 
 @dataclass
@@ -94,9 +123,23 @@ class ReducedChainState(PlutusData):
 
 # NOTE: a full stake chain state without any registered pool is around 330 bytes
 @dataclass
-class StakeChainState(PlutusData):
+class StakeChainV0State(PlutusData):
     CONSTR_ID = 0
-    params: StakeChainParams
+    params: StakeChainV0Params
+    holder_state: StakeHolderRegistrations
+    chain_state: CoreChainState
+    producer_state: ProducerState
+    # holders registered during the last block, to be skipped in the next block
+    # just an int since new holders always jump to the start of the list
+    skip_holders: int
+    # reference to previous output
+    spent_for: Union[Nothing, TxOutRef]
+
+
+@dataclass
+class StakeChainV1State(PlutusData):
+    CONSTR_ID = 0
+    params: StakeChainV1Params
     holder_state: StakeHolderRegistrations
     chain_state: CoreChainState
     producer_state: ProducerState

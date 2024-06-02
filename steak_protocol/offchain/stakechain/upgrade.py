@@ -3,6 +3,7 @@ from typing import List
 
 import fire
 import pycardano
+import requests
 from opshin.ledger.api_v2 import PubKeyCredential, NoOutputDatum, SomeOutputDatum
 from opshin.prelude import Nothing
 from pycardano import (
@@ -22,14 +23,16 @@ from steak_protocol.offchain.util import (
     amount_of_token_in_value,
     token_from_string,
     asset_from_token,
+    ContractVersion,
+    VERSION_0,
 )
-from steak_protocol.onchain.stakechain.stakechain import MineBlock, UpgradeProtocol
-from steak_protocol.onchain.stakechain.stakechain_upgrade import (
+from steak_protocol.onchain.stakechain.stakechain_v0 import UpgradeProtocol
+from steak_protocol.onchain.stakechain.stakechain_upgrade_v0 import (
     ChainUpgradeProposal,
     ChainUpgrade,
 )
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     CoreChainState,
     StakeHolderState,
     ProducerState,
@@ -47,16 +50,44 @@ from steak_protocol.utils.to_script_context import (
 from opshin.builder import apply_parameters
 
 
-def compute_current_slot(genesis_time: int, slot_length: int) -> int:
-    current_time = int(datetime.datetime.now().timestamp() * 1000)
-    return (current_time - genesis_time) // slot_length
+def previous_producer_states_from_kupo(
+    kupo_url: str,
+    stakechain_addr: str,
+    context: pycardano.ChainContext,
+):
+    """
+    Assuming that a kupo instance is running at the given url with the match pattern matching the stakechain address
+    and no pruning, we can obtain the previous producer states from the kupo instance.
 
-
-def compute_validity_interval(genesis_time: int, slot_length: int) -> tuple[int, int]:
-    suggested_slot = compute_current_slot(genesis_time, slot_length)
-    min_acceptable_lower_bound = genesis_time + slot_length * suggested_slot
-    max_acceptable_upper_bound = min_acceptable_lower_bound + slot_length
-    return min_acceptable_lower_bound, max_acceptable_upper_bound
+    Returns preceding producer states in the order of most recent first.
+    Returns only those states that resolve to the same message
+    """
+    utxo_url = "{}/matches/{}?order=most_recent_first".format(kupo_url, stakechain_addr)
+    matches = requests.get(utxo_url).json()
+    initial_producer_message_hash = None
+    producer_states = []
+    for match in matches:
+        dtm_hash = match["datum_hash"]
+        if dtm_hash is None:
+            break
+        datum_cbor = requests.get("{}/datums/{}".format(kupo_url, dtm_hash)).json()[
+            "datum"
+        ]
+        chain_state = StakeChainV0State.from_cbor(datum_cbor)
+        producer_state = chain_state.producer_state
+        if isinstance(producer_state.auxiliary, NoOutputDatum):
+            break
+        if isinstance(producer_state.auxiliary, SomeOutputDatum):
+            producer_message_hash = datum_hash(producer_state.auxiliary.datum).payload
+        else:
+            producer_message_hash = producer_state.auxiliary.datum_hash
+        if (
+            initial_producer_message_hash is None
+            or initial_producer_message_hash == producer_message_hash
+        ):
+            initial_producer_message_hash = producer_message_hash
+            producer_states.append(producer_state)
+    return producer_states
 
 
 def main(
@@ -65,17 +96,21 @@ def main(
     previous_producer_states_cbor: List[str] = None,
     proposal_cbor: str = None,
     return_tx: bool = False,
+    stakechain_version: ContractVersion = VERSION_0,
+    stakechain_upgrade_version: ContractVersion = VERSION_0,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
     )
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain")
+    stakechain_script, _, stakechain_address = get_contract(
+        "stakechain_" + stakechain_version
+    )
     stakechain_script = get_ref_utxo(stakechain_script, context)
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
 
     stakechain_upgrade_script_raw, _, _ = get_contract(
-        "stakechain_upgrade", compressed=True
+        "stakechain_upgrade_" + stakechain_upgrade_version, compressed=True
     )
     stakechain_upgrade_script = apply_parameters(
         stakechain_upgrade_script_raw,
@@ -90,7 +125,7 @@ def main(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
@@ -119,7 +154,7 @@ def main(
     else:
         new_params = upgrade_proposal.upgrade_params
 
-    new_stakechain_state = StakeChainState(
+    new_stakechain_state = StakeChainV0State(
         params=new_params,
         holder_state=stakechain_state.holder_state,
         chain_state=stakechain_state.chain_state,

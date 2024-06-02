@@ -36,7 +36,9 @@ def validator(
         assert (
             amount_of_token_in_output(stakechain_auth_nft, chain_input) == 1
         ), "Chain must have exactly one auth NFT"
-        stake_chain_state: StakeChainState = resolve_datum_unsafe(chain_input, tx_info)
+        stake_chain_state: StakeChainV0State = resolve_datum_unsafe(
+            chain_input, tx_info
+        )
         stakeholder_auth_nft = stake_chain_state.params.stakeholder_auth_nft
         stakeholder_outputs = [
             o

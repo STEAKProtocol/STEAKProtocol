@@ -43,11 +43,13 @@ from steak_protocol.offchain.util import (
     commit_hash_secrets,
     write_ahead_hash_secrets,
     all_committed_hash_secrets,
+    ContractVersion,
+    VERSION_0,
 )
-from steak_protocol.onchain.stakechain.stakechain import MineBlockUpdateStake
+from steak_protocol.onchain.stakechain.stakechain_v0 import MineBlockUpdateStake
 from steak_protocol.onchain.stakeholder.stakeholder import UpdateStake
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     CoreChainState,
     StakeHolderState,
     ProducerState,
@@ -118,12 +120,13 @@ def mine(
     producer_message_hash_hex: Optional[str] = None,
     tx_validity_width: int = 40,
     commit_interval: int = 120,
+    stakechain_version: ContractVersion = VERSION_0,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
     )
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain")
+    stakechain_script, _, stakechain_address = get_contract("stakechain_" + version)
     stakeholder_script, _, stakeholder_address = get_contract("stakeholder")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
     stakepool_script, stakepool_script_hash, _ = get_contract("stakepool")
@@ -134,7 +137,7 @@ def mine(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
@@ -208,7 +211,7 @@ def mine(
         if producer_message_hash_hex is None
         else SomeOutputDatumHash(datum_hash=bytes.fromhex(producer_message_hash_hex))
     )
-    new_stakechain_state = StakeChainState(
+    new_stakechain_state = StakeChainV0State(
         params=stakechain_state.params,
         holder_state=stakechain_state.holder_state,
         chain_state=new_core_chain_state,

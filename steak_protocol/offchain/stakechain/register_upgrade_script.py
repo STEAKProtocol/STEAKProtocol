@@ -14,20 +14,15 @@ from pycardano import (
 )
 
 from steak_protocol.offchain.util import (
-    sorted_utxos,
-    with_min_lovelace,
     STAKE_CHAIN_AUTH_NFT,
     amount_of_token_in_value,
     token_from_string,
     asset_from_token,
-)
-from steak_protocol.onchain.stakechain.stakechain import MineBlock, UpgradeProtocol
-from steak_protocol.onchain.stakechain.stakechain_upgrade import (
-    ChainUpgradeProposal,
-    ChainUpgrade,
+    ContractVersion,
+    VERSION_0,
 )
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     CoreChainState,
     StakeHolderState,
     ProducerState,
@@ -50,6 +45,7 @@ def main(
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     upgrade_len: int = 2,
     return_tx: bool = False,
+    stakechain_upgrade_version: ContractVersion = VERSION_0,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -65,7 +61,7 @@ def main(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
@@ -73,7 +69,7 @@ def main(
     assert stakechain_utxo is not None, "No stake chain state found"
 
     stakechain_upgrade_script_raw, _, _ = get_contract(
-        "stakechain_upgrade", compressed=True
+        "stakechain_upgrade_" + stakechain_upgrade_version, compressed=True
     )
     stakechain_upgrade_script = apply_parameters(
         stakechain_upgrade_script_raw,

@@ -34,8 +34,10 @@ from steak_protocol.offchain.util import (
     value_from_token,
     commit_hash_secrets,
     write_ahead_hash_secrets,
+    ContractVersion,
+    VERSION_0,
 )
-from steak_protocol.onchain.stakechain.stakechain import RegisterStake
+from steak_protocol.onchain.stakechain.stakechain_v0 import RegisterStake
 from steak_protocol.onchain.stakepool.stakepool import (
     RegisterPool,
     PoolState,
@@ -43,7 +45,7 @@ from steak_protocol.onchain.stakepool.stakepool import (
 )
 from steak_protocol.onchain.stakeholder.stakeholder_auth_nft import Mint
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     StakeHolderRegistrations,
     StakeHolderState,
     StakePoolParams,
@@ -68,6 +70,7 @@ def main(
     skip_warning: bool = False,
     return_tx: bool = False,
     return_address: Optional[str] = None,
+    stakechain_version: ContractVersion = VERSION_0,
 ):
     print(
         "Warning: if you previously ran this script with the same name, the secrets will be overwritten. Press enter to continue."
@@ -79,7 +82,9 @@ def main(
         name, network=network
     )
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain")
+    stakechain_script, _, stakechain_address = get_contract(
+        "stakechain_" + stakechain_version
+    )
     _, _, stakeholder_address = get_contract("stakeholder")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
     stakepool_script, _, _ = get_contract("stakepool")
@@ -90,7 +95,7 @@ def main(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
@@ -124,7 +129,7 @@ def main(
     assert utxo_to_spend is not None, "UTxO not found to spend!"
 
     # construct transaction
-    new_stakechain_state = StakeChainState(
+    new_stakechain_state = StakeChainV0State(
         params=stakechain_state.params,
         chain_state=stakechain_state.chain_state,
         holder_state=StakeHolderRegistrations(

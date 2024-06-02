@@ -25,10 +25,10 @@ from steak_protocol.offchain.util import (
     commit_hash_secrets,
     write_ahead_hash_secrets,
 )
-from steak_protocol.onchain.stakechain.stakechain import RegisterStake
+from steak_protocol.onchain.stakechain.stakechain_v0 import RegisterStake
 from steak_protocol.onchain.stakeholder.stakeholder_auth_nft import Mint
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     StakeHolderRegistrations,
     StakeHolderState,
     StakePoolParams,
@@ -66,7 +66,7 @@ def main(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u

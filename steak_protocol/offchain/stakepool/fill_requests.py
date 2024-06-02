@@ -28,7 +28,7 @@ from steak_protocol.onchain.stakepool.stakepool_request import (
     FillRequest,
 )
 import steak_protocol.onchain.stakeholder.stakeholder as stakeholder
-import steak_protocol.onchain.stakechain.stakechain as stakechain
+import steak_protocol.onchain.stakechain.stakechain_v0 as stakechain
 from steak_protocol.onchain.stakepool.stakepool import AddStake, RemoveStake, PoolState
 from steak_protocol.offchain.util import (
     sorted_utxos,
@@ -41,7 +41,7 @@ from steak_protocol.offchain.util import (
 )
 from opshin.prelude import Token
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     StakeHolderRegistrations,
     StakeHolderState,
 )
@@ -92,7 +92,7 @@ def fill_request(
 ):
     _, payment_skey, payment_address = get_signing_info(name, network=network)
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain")
+    stakechain_script, _, stakechain_address = get_contract("stakechain_v0")
     stakeholder_script, _, stakeholder_address = get_contract("stakeholder")
     stakepool_script, stakepool_policy_id, stakepool_address = get_contract("stakepool")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
@@ -109,7 +109,7 @@ def fill_request(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
@@ -239,7 +239,7 @@ def fill_request(
                 )
 
             # update weight according to new stake amount
-            new_stakechain_state = StakeChainState(
+            new_stakechain_state = StakeChainV0State(
                 params=stakechain_state.params,
                 holder_state=StakeHolderRegistrations(
                     stake_holder_weights=new_stake_holder_weights,

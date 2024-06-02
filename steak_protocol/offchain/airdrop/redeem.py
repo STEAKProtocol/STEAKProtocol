@@ -26,10 +26,10 @@ from steak_protocol.offchain.util import (
     commit_hash_secrets,
     write_ahead_hash_secrets,
 )
-from steak_protocol.onchain.stakechain.stakechain import RegisterStake
+from steak_protocol.onchain.stakechain.stakechain_v0 import RegisterStake
 from steak_protocol.onchain.stakeholder.stakeholder_auth_nft import Mint
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     StakeHolderRegistrations,
     StakeHolderState,
     StakePoolParams,
