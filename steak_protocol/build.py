@@ -17,6 +17,9 @@ from steak_protocol.onchain.stakeholder import (
     stakeholder,
 )
 from steak_protocol.onchain.stakechain import (
+    stakechain_v0,
+    stakechain_upgrade_v0,
+    stakechain_upgrade_v0a,
     stakechain_v1,
     stakechain_auth_nft,
     stakechain_upgrade_v1,
@@ -110,6 +113,7 @@ def main(
     ):
         build_compressed("minting", script.__file__)
     for script in (
+        stakechain_v0,
         stakechain_v1,
         stakeholder,
         stakepool_request,
@@ -123,10 +127,12 @@ def main(
         stakechain_auth_nft.__file__,
         args=(f'{{"bytes": "{unique_stake_chain_nft_arg.hex()}"}}',),
     )
-    build_compressed(
-        "rewarding",
-        stakechain_upgrade_v1.__file__,
-    )
+    for script in (
+        stakechain_upgrade_v0,
+        stakechain_upgrade_v0a,
+        stakechain_upgrade_v1,
+    ):
+        build_compressed("rewarding", script.__file__)
 
 
 if __name__ == "__main__":

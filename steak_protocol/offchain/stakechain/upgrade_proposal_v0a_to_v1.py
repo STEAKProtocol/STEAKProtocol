@@ -27,17 +27,16 @@ from steak_protocol.offchain.util import (
     VERSION_0,
     VERSION_1,
 )
-from steak_protocol.onchain.stakechain.stakechain_upgrade_v1 import (
+from steak_protocol.onchain.stakechain.stakechain_upgrade_v0a import (
     ChainUpgradeProposal,
 )
 from steak_protocol.onchain.types import (
     StakeChainV0State,
     StakeChainV1Params,
 )
-from steak_protocol.utils import get_signing_info, network, context
-from steak_protocol.utils.contracts import get_contract, get_ref_utxo
+from steak_protocol.utils import context
+from steak_protocol.utils.contracts import get_contract
 from steak_protocol.utils.to_script_context import (
-    to_tx_out_ref,
     to_address,
     to_fraction,
 )
@@ -52,17 +51,13 @@ def main(
     register_fee: int = 50_000_000_000,
     fraction_per_block: int = "8/500000",
 ):
-    stakechain_v0_script, _, stakechain_v0_address = get_contract(
+    _, _, stakechain_v0_address = get_contract(
         "stakechain_" + VERSION_0
     )
-    stakechain_v1_script, _, stakechain_v1_address = get_contract(
+    _, _, stakechain_v1_address = get_contract(
         "stakechain_" + VERSION_1
     )
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
-
-    stakechain_upgrade_script_raw, _, _ = get_contract(
-        "stakechain_upgrade_" + VERSION_1, compressed=True
-    )
 
     stakechain_utxo = None
     stakechain_state = None
@@ -78,7 +73,7 @@ def main(
     assert stakechain_utxo is not None, "No stake chain state found"
 
     stakechain_upgrade_script_raw, _, _ = get_contract(
-        "stakechain_upgrade_v1", compressed=True
+        "stakechain_upgrade_" + VERSION_1, compressed=True
     )
     stakechain_upgrade_script = apply_parameters(
         stakechain_upgrade_script_raw,

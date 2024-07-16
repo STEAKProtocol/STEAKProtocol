@@ -2,8 +2,6 @@
 A withdrawal script that certifies correct upgrades of the stakechain based on consensus among stakeholders.
 """
 
-from opshin.std.integrity import check_integrity
-
 from steak_protocol.onchain.util import *
 from steak_protocol.onchain.utils.value import *
 
@@ -53,7 +51,7 @@ def validator(
     assert (
         amount_of_token_in_output(stakechain_auth_nft, prev_chain_state_output) == 1
     ), "Wrong stake chain output referenced"
-    prev_chain_state: StakeChainV1State = resolve_datum_unsafe(
+    prev_chain_state: StakeChainV0State = resolve_datum_unsafe(
         prev_chain_state_output, tx_info
     )
 
@@ -94,10 +92,8 @@ def validator(
 
     # check state upgrade or preservation
     upgrade_params = proposal.upgrade_params
-    if isinstance(upgrade_params, StakeChainV1Params):
-        new_params = upgrade_params
-    else:
-        new_params = prev_chain_state.params
+    assert isinstance(upgrade_params, StakeChainV1Params), "only allow upgrade to V1"
+    new_params = upgrade_params
 
     new_desired_chain_state = StakeChainV1State(
         new_params,

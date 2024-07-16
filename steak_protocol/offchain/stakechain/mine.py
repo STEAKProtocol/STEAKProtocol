@@ -9,7 +9,6 @@ import pycardano
 from opshin.ledger.api_v2 import (
     ScriptCredential,
     NoOutputDatum,
-    SomeOutputDatum,
     SomeOutputDatumHash,
 )
 from opshin.std.builtins import sha2_256
@@ -23,13 +22,11 @@ from pycardano import (
     Value,
     Withdrawals,
     Address,
-    plutus_script_hash,
     UTxO,
 )
 from steak_protocol.onchain.stakepool.stakepool import (
     InteractWithPool,
     PoolState,
-    PoolParams,
 )
 from steak_protocol.offchain.util import (
     sorted_utxos,
@@ -38,22 +35,22 @@ from steak_protocol.offchain.util import (
     amount_of_token_in_value,
     token_from_string,
     asset_from_token,
-    committed_hash_secrets,
     custom_sign_message,
     commit_hash_secrets,
     write_ahead_hash_secrets,
     all_committed_hash_secrets,
     ContractVersion,
     VERSION_0,
+    VERSION_1,
 )
-from steak_protocol.onchain.stakechain.stakechain_v0 import MineBlockUpdateStake
+from steak_protocol.onchain.stakechain import stakechain_v0, stakechain_v1
 from steak_protocol.onchain.stakeholder.stakeholder import UpdateStake
 from steak_protocol.onchain.types import (
     StakeChainV0State,
+    StakeChainV1State,
     CoreChainState,
     StakeHolderState,
     ProducerState,
-    StakeHolderRegistrations,
 )
 from steak_protocol.onchain.util import scale_fraction
 from steak_protocol.utils import get_signing_info, network, context
@@ -92,6 +89,7 @@ def main(
     # lower values may lead to more frequent necessecity to recover the pool
     # higher values may lead to more frequent missed blocks
     commit_interval: int = 120,
+    stakechain_version=VERSION_1,
 ):
     while True:
         try:
@@ -102,6 +100,7 @@ def main(
                 producer_message_hash_hex=producer_message_hash_hex,
                 tx_validity_width=tx_validity_width,
                 commit_interval=commit_interval,
+                stakechain_version=stakechain_version,
             )
         except KeyboardInterrupt:
             break
@@ -122,11 +121,11 @@ def mine(
     commit_interval: int = 120,
     stakechain_version: ContractVersion = VERSION_0,
 ):
-    payment_vkey, payment_skey, payment_address = get_signing_info(
-        name, network=network
-    )
+    _, payment_skey, payment_address = get_signing_info(name, network=network)
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain_" + version)
+    stakechain_script, _, stakechain_address = get_contract(
+        "stakechain_" + stakechain_version
+    )
     stakeholder_script, _, stakeholder_address = get_contract("stakeholder")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
     stakepool_script, stakepool_script_hash, _ = get_contract("stakepool")
@@ -137,8 +136,13 @@ def mine(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
-        except DeserializeException as e:
+            if stakechain_version == VERSION_0:
+                stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
+            elif stakechain_version == VERSION_1:
+                stakechain_state = StakeChainV1State.from_cbor(u.output.datum.cbor)
+            else:
+                continue
+        except DeserializeException:
             continue
         stakechain_utxo = u
         break
@@ -211,7 +215,10 @@ def mine(
         if producer_message_hash_hex is None
         else SomeOutputDatumHash(datum_hash=bytes.fromhex(producer_message_hash_hex))
     )
-    new_stakechain_state = StakeChainV0State(
+    new_stakechain_state_type = (
+        StakeChainV0State if stakechain_version == VERSION_0 else StakeChainV1State
+    )
+    new_stakechain_state = new_stakechain_state_type(
         params=stakechain_state.params,
         holder_state=stakechain_state.holder_state,
         chain_state=new_core_chain_state,
@@ -248,8 +255,13 @@ def mine(
     )
     stakeholder_ref_utxo_index = all_ref_input_utxos.index(stakeholder_utxo)
 
+    mining_redeemer_type = (
+        stakechain_v0.MineBlockUpdateStake
+        if stakechain_version == VERSION_0
+        else stakechain_v1.MineBlockUpdateStake
+    )
     mining_redeemer = Redeemer(
-        MineBlockUpdateStake(
+        mining_redeemer_type(
             old_state_index=stakechain_utxo_index,
             new_state_index=0,
             producing_holder_ref_utxo_index=stakeholder_ref_utxo_index,
@@ -338,13 +350,12 @@ def mine(
     ] += amount_to_pool
 
     txbuilder.add_output(
-        with_min_lovelace(
-            TransactionOutput(
-                stakechain_address,
-                amount=Value(multi_asset=desired_new_value),
-                datum=new_stakechain_state,
+        TransactionOutput(
+            stakechain_address,
+            amount=Value(
+                coin=stakechain_utxo.output.amount.coin, multi_asset=desired_new_value
             ),
-            context,
+            datum=new_stakechain_state,
         )
     )
     txbuilder.add_output(

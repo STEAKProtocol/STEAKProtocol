@@ -149,4 +149,5 @@ def custom_sign_message(secret: bytes, message: bytes) -> bytes:
 
 ContractVersion = Literal["v0", "v1"]
 VERSION_0 = "v0"
+VERSION_0a = "v0a"
 VERSION_1 = "v1"
