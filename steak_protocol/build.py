@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union
 
 import fire
+import pycardano
 
 from opshin.prelude import Token
 
@@ -84,25 +85,25 @@ def token_from_token_string(token: str) -> Token:
 
 
 def main(
-    airdrop_admin: str = "airdrop",
+    airdrop_admin_address: str = "addr1v9w2fjjd3zza2kk0r5qezakqckpuyyhays00g5393ksrn9q0fkekw",
     airdrop_expiration: int = int(
         datetime.datetime(
             2025, 1, 1, tzinfo=datetime.timezone(datetime.timedelta())
         ).timestamp()
         * 1000
     ),
-    airdrop_minutxo_receiver: str = "recipient",
+    airdrop_minutxo_receiver_address: str = "addr1qxure479tsn845ljg706qnj8w92ge4765e4pakxumnq6n2sg23qataexxxye75kx8jjd9cx50jh3h3f7amv2f6d65j8quk4z45",
 ):
-    admin_payment_vkey, admin_payment_skey, admin_payment_address = get_signing_info(
-        airdrop_admin, network=network
+    airdrop_admin_address = pycardano.Address.from_primitive(airdrop_admin_address)
+    airdrop_minutxo_receiver = pycardano.Address.from_primitive(
+        airdrop_minutxo_receiver_address
     )
-    airdrop_minutxo_receiver = get_address(airdrop_minutxo_receiver, network=network)
     build_compressed(
         "spending",
         airdrop.__file__,
         args=(
             to_address(airdrop_minutxo_receiver).to_json(),
-            f'{{"bytes": "{admin_payment_vkey.hash().payload.hex()}"}}',
+            f'{{"bytes": "{airdrop_admin_address.payment_part.payload.hex()}"}}',
             f'{{"int": {airdrop_expiration}}}',
         ),
     )
