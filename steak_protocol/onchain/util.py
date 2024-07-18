@@ -167,7 +167,7 @@ def check_owner_signed_tx(owner: Owner, tx_info: TxInfo) -> None:
     assert owner_signed_tx(owner, tx_info), "Owner of the stake pool did not sign tx"
 
 
-def to_reduced_chain_state(chain_state: StakeChainState) -> ReducedChainState:
+def to_reduced_chain_state(chain_state: StakeChainV0State) -> ReducedChainState:
     return ReducedChainState(
         sha2_256(serialise_data(chain_state.params)),
         sha2_256(serialise_data(chain_state.holder_state)),

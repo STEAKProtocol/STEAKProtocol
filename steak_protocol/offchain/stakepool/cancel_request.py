@@ -13,13 +13,15 @@ from steak_protocol.onchain.stakepool.stakepool_request import (
     RemoveStakeRequest,
     CancelRequest,
 )
-from steak_protocol.onchain.types import StakeChainState
+from steak_protocol.onchain.types import StakeChainV0State
 from steak_protocol.offchain.util import (
     with_min_lovelace,
     asset_from_token,
     STAKE_CHAIN_AUTH_NFT,
     token_from_string,
     amount_of_token_in_value,
+    ContractVersion,
+    VERSION_0,
 )
 from steak_protocol.utils import get_signing_info, network, context
 from steak_protocol.utils.contracts import get_contract
@@ -33,6 +35,7 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     return_tx: bool = False,
+    stakechain_version: ContractVersion = VERSION_0,
 ):
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
@@ -42,7 +45,7 @@ def main(
         "stakepool_request"
     )
     _, _, stakeholder_address = get_contract("stakeholder")
-    _, _, stakechain_address = get_contract("stakechain")
+    _, _, stakechain_address = get_contract("stakechain_" + stakechain_version)
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
 
     stakechain_utxo = None
@@ -51,14 +54,13 @@ def main(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
         break
     assert stakechain_utxo is not None, "No stake chain state found"
 
-    stakecoin = stakechain_state.params.stake_coin
     assert stakechain_state.params.stakeholder_address == to_address(
         stakeholder_address
     ), "Wrong stakeholder address"

@@ -21,12 +21,14 @@ from steak_protocol.offchain.util import (
     token_from_string,
     asset_from_token,
     value_from_token,
+    ContractVersion,
+    VERSION_0,
 )
-from steak_protocol.onchain.stakechain.stakechain import (
+from steak_protocol.onchain.stakechain.stakechain_v0 import (
     DeregisterStake,
 )
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     StakeHolderState,
     StakeHolderRegistrations,
 )
@@ -47,13 +49,16 @@ def main(
     name: str = "admin",
     stakechain_auth_nft: str = STAKE_CHAIN_AUTH_NFT,
     pool_id: str = "1番",
+    stakechain_version: ContractVersion = VERSION_0,
 ):
     pool_id = pool_id.encode()
     payment_vkey, payment_skey, payment_address = get_signing_info(
         name, network=network
     )
 
-    stakechain_script, _, stakechain_address = get_contract("stakechain")
+    stakechain_script, _, stakechain_address = get_contract(
+        "stakechain_" + stakechain_version
+    )
     stakeholder_script, _, stakeholder_address = get_contract("stakeholder")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
     stakepool_script, _, _ = get_contract("stakepool")
@@ -71,7 +76,7 @@ def main(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
@@ -122,7 +127,7 @@ def main(
         ),
     )
 
-    new_stakechain_state = StakeChainState(
+    new_stakechain_state = StakeChainV0State(
         params=stakechain_state.params,
         holder_state=new_holder_registrations,
         chain_state=stakechain_state.chain_state,

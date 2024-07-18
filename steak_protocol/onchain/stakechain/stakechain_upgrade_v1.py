@@ -20,7 +20,7 @@ class ChainUpgradeProposal(PlutusData):
     # the new address of the protocol
     upgrade_address: Union[Address, Nothing]
     # the new parameters of the protocol
-    upgrade_params: Union[StakeChainParams, Nothing]
+    upgrade_params: Union[StakeChainV1Params, Nothing]
     # payout of funds governed by the protocol
     payout_txout: Union[TxOut, Nothing]
     # taking in treasury funds
@@ -53,13 +53,12 @@ def validator(
     assert (
         amount_of_token_in_output(stakechain_auth_nft, prev_chain_state_output) == 1
     ), "Wrong stake chain output referenced"
-    prev_chain_state: StakeChainState = resolve_datum_unsafe(
+    prev_chain_state: StakeChainV1State = resolve_datum_unsafe(
         prev_chain_state_output, tx_info
     )
 
     # check that the proposal was agreed by all n preceding blocks
     proposal = redeemer.upgrade_proposal
-    check_integrity(proposal)
     proposal_hash = SomeOutputDatumHash(blake2b_256(proposal.to_cbor()))
     chain_state = prev_chain_state.producer_state
     assert (
@@ -89,18 +88,18 @@ def validator(
     assert (
         amount_of_token_in_output(stakechain_auth_nft, new_chain_state_output) == 1
     ), "auth nft must be present"
-    new_chain_state: StakeChainState = resolve_datum_unsafe(
+    new_chain_state: StakeChainV1State = resolve_datum_unsafe(
         new_chain_state_output, tx_info
     )
 
     # check state upgrade or preservation
     upgrade_params = proposal.upgrade_params
-    if isinstance(upgrade_params, StakeChainParams):
+    if isinstance(upgrade_params, StakeChainV1Params):
         new_params = upgrade_params
     else:
         new_params = prev_chain_state.params
 
-    new_desired_chain_state = StakeChainState(
+    new_desired_chain_state = StakeChainV1State(
         new_params,
         prev_chain_state.holder_state,
         prev_chain_state.chain_state,

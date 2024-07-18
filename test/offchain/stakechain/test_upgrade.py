@@ -7,10 +7,12 @@ from pycardano import datum_hash
 from steak_protocol.offchain.stakechain.init import main as init_stakechain
 from steak_protocol.offchain.stakeholder.init import main as init_stakeholder
 from steak_protocol.offchain.stakechain.mine import mine as mine_stakechain
-from steak_protocol.onchain.stakechain.stakechain_upgrade import ChainUpgradeProposal
+from steak_protocol.onchain.stakechain.stakechain_upgrade_v0 import ChainUpgradeProposal
 from steak_protocol.submit_ref_script import main as submit_ref_script
 from steak_protocol.offchain.stakechain.upgrade import main as upgrade_stakechain
-from steak_protocol.offchain.stakechain.register_upgrade import main as register_upgrade
+from steak_protocol.offchain.stakechain.register_upgrade_script import (
+    main as register_upgrade,
+)
 from steak_protocol.utils import get_address
 from steak_protocol.utils.to_script_context import to_address
 

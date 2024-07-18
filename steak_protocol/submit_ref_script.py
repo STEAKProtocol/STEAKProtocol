@@ -15,7 +15,7 @@ from pycardano import (
 )
 
 from steak_protocol.onchain import one_shot_nft, airdrop
-from steak_protocol.onchain.stakechain import stakechain
+from steak_protocol.onchain.stakechain import stakechain_v0
 from steak_protocol.onchain.stakeholder import stakeholder
 from steak_protocol.onchain.stakepool import stakepool
 from steak_protocol.utils import network, get_signing_info

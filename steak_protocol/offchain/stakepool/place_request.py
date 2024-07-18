@@ -21,9 +21,11 @@ from steak_protocol.offchain.util import (
     STAKE_CHAIN_AUTH_NFT,
     token_from_string,
     amount_of_token_in_value,
+    ContractVersion,
+    VERSION_0,
 )
 from steak_protocol.onchain.types import (
-    StakeChainState,
+    StakeChainV0State,
     StakeHolderState,
 )
 from steak_protocol.utils import get_signing_info, network, context
@@ -41,13 +43,14 @@ def main(
     stakecoin_amount: int = 42_000_000,  # negative amount means remove stake request
     stakepool_id: str = "1番",
     return_tx: bool = False,
+    stakechain_version: ContractVersion = VERSION_0,
 ):
     stakepool_id = stakepool_id.encode()
     _, payment_skey, payment_address = get_signing_info(name, network=network)
 
     _, _, stakepool_request_address = get_contract("stakepool_request")
     _, _, stakeholder_address = get_contract("stakeholder")
-    _, _, stakechain_address = get_contract("stakechain")
+    _, _, stakechain_address = get_contract("stakechain_" + stakechain_version)
     _, stakepool_policy_id, _ = get_contract("stakepool")
     stakechain_auth_nft = token_from_string(stakechain_auth_nft)
 
@@ -57,7 +60,7 @@ def main(
         if amount_of_token_in_value(stakechain_auth_nft, u.output.amount) == 0:
             continue
         try:
-            stakechain_state = StakeChainState.from_cbor(u.output.datum.cbor)
+            stakechain_state = StakeChainV0State.from_cbor(u.output.datum.cbor)
         except DeserializeException as e:
             continue
         stakechain_utxo = u
