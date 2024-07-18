@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/STEAKProtocol/STEAKProtocol">
-    <img src="https://steakprotocol.com/logo.png" width="200" />
+    <img src="https://raw.githubusercontent.com/STEAKProtocol/STEAKProtocol/main/logo.png" width="200" />
   </a>
   <h1> STEAK Protocol </h1>
 </div>  
