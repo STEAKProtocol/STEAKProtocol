@@ -24,7 +24,7 @@ The STEAK protocol consists of the following components:
 Every 60 seconds, a slot leader is elected by the protocol to attach a new block to the blockchain.
 The slot leader is chosen pseudorandomly based on the block hash and weighs participations based on the stake of the contributing pool.
 
-More details can be found in the [whitepaper](https://steakprotocol.com/assets/whitepaper-DoFg2EoT.pdf).
+More details can be found in the [whitepaper](https://raw.githubusercontent.com/steakprotocol/steakprotocol/main/whitepaper.pdf).
 
 #### Mainnet
 
